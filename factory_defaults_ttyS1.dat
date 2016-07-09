@@ -1,0 +1,52 @@
+Controller on port /dev/ttyS1: ESP300 3.9
+
+Axis 0: IMS600PP SNb07-2022
+  Trajectory mode: TM_TRAPEZOIDAL
+  Jerk:            800
+  Acceleration:    200
+  Deceleration:    200
+  EStop decel:     1e+06
+  Max decel:       400
+  Speed:           50
+  Max speed:       100
+  Jog high speed:  50
+  Jog low speed:   12.5
+  HS high speed:   20
+  HS low speed:    5
+  HS mode:         HSM_HOME_SWITCH_AND_INDEX_SIGNALS
+  Left limit:      -8
+  Right limit:     592
+
+Axis 1: IMS400PP SNb07-0909
+  Trajectory mode: TM_TRAPEZOIDAL
+  Jerk:            800
+  Acceleration:    200
+  Deceleration:    200
+  EStop decel:     1e+06
+  Max decel:       400
+  Speed:           50
+  Max speed:       100
+  Jog high speed:  50
+  Jog low speed:   12.5
+  HS high speed:   20
+  HS low speed:    5
+  HS mode:         HSM_HOME_SWITCH_AND_INDEX_SIGNALS
+  Left limit:      -8
+  Right limit:     392
+
+Axis 2: RV120PP SNb07-0393
+  Trajectory mode: TM_TRAPEZOIDAL
+  Jerk:            160
+  Acceleration:    40
+  Deceleration:    40
+  EStop decel:     1e+06
+  Max decel:       80
+  Speed:           10
+  Max speed:       20
+  Jog high speed:  10
+  Jog low speed:   2.5
+  HS high speed:   10
+  HS low speed:    2.5
+  HS mode:         HSM_HOME_SWITCH_AND_INDEX_SIGNALS
+  Left limit:      -170
+  Right limit:     170
