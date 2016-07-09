@@ -20,6 +20,7 @@
 
 #include<iostream>
 #include<sstream>
+#include<cstdio>
 
 #include<sys/time.h>
 
@@ -135,14 +136,14 @@ std::string Exception::function(bool highlight) const throw()
 
   unsigned highlight_num=m_backtrace.size()-1;
   if(highlight)highlight_num=BackTrace::instance()->backTrace().size();
-  
+
   for(unsigned i=0; i<m_backtrace.size(); i++)
     {
       if((highlight)&&(m_backtrace[m_backtrace.size()-i-1] !=
 		       BackTrace::instance()->backTrace().at(highlight_num-i)))
 	highlight=false;
-      
-      if((highlight)&&(i==highlight_num))oss 
+
+      if((highlight)&&(i==highlight_num))oss
 	<< m_backtrace[m_backtrace.size()-i-1] << " (*)" << std::endl;
       else oss << m_backtrace[m_backtrace.size()-i-1] << std::endl;
     }
@@ -158,11 +159,11 @@ void Exception::print(std::ostream& os) const
        << m_details_oss.str() << std::endl;
   if(m_backtrace.size()>0)
     for(unsigned i=0; i<m_backtrace.size(); i++)
-      os << (i==0?"Function back trace: ":"                     ") 
+      os << (i==0?"Function back trace: ":"                     ")
 	 << m_backtrace[m_backtrace.size()-i-1] << std::endl;
 }
 
-SystemError::SystemError(const std::string& message, int error_num) 
+SystemError::SystemError(const std::string& message, int error_num)
   throw(): Exception("System Error", message, strerror(error_num)),
 	   m_error_num(error_num)
 {
