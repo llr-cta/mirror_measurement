@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 #
 # Motion control common makefile definitions
-# 
+#
 # Original Author: Stephan Fegan
 # $Author: sfegan $
 # $Date: 2007/10/20 02:03:37 $
@@ -33,14 +33,14 @@ MCLIBS = -lMotionControl
 ################################### GNU C++ ###################################
 
 ifndef OPTFLAGS
-OPTFLAGS = -O2 -g -m32 
+OPTFLAGS = -O2 -g 
 endif
 
 ifndef CXX
 CXX = g++
 endif
-CXXFLAGS = $(OPTFLAGS) -Wall $(MCDEFFLAGS) 
-LDFLAGS = $(OPTFLAGS) -Wall 
+CXXFLAGS = $(OPTFLAGS) -Wall $(MCDEFFLAGS)
+LDFLAGS = $(OPTFLAGS) -Wall
 #CXXFLAGS = -g -fno-default-inline -fno-inline -m32 -Wall $(INCLUDE_DIRS) $(DEFINES)
 #LDFLAGS = -static -g -fno-default-inline -fno-inline -m32 -Wall $(LIB_DIRS)
 #LDFLAGS = -g -fno-default-inline -fno-inline -m32 -Wall $(LIB_DIRS)

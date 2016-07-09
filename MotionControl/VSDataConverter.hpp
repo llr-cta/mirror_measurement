@@ -22,9 +22,9 @@
 /**
  *
  * Original Author: Stephen Fegan
- * $Author: sfegan $
- * $Date: 2008/04/14 06:13:07 $
- * $Revision: 1.2 $
+ * $Author: matthew $
+ * $Date: 2008/06/27 21:53:09 $
+ * $Revision: 1.11 $
  * $Tag$
  *
  **/
@@ -53,8 +53,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <list>
+#include <set>
+#include <map>
 #include <cstdlib>
 #include <limits>
+#include <cstring>
+#include <cstdio>
 #include <stdint.h>
 
 #ifndef INT8_MIN
@@ -235,6 +240,33 @@ namespace VERITAS
     static inline std::string typeName();
   };
 
+  template<typename T> class VSDatumConverter<std::list<T> >
+  {
+  public:
+    static inline void toString(std::string& s, const std::list<T>& x, 
+				bool low_precision=false);
+    static inline bool fromString(std::list<T>& x, const char* s);
+    static inline std::string typeName();
+  };
+
+  template<typename T> class VSDatumConverter<std::set<T> >
+  {
+  public:
+    static inline void toString(std::string& s, const std::set<T>& x, 
+				bool low_precision=false);
+    static inline bool fromString(std::set<T>& x, const char* s);
+    static inline std::string typeName();
+  };
+
+  template<typename T1, typename T2> class VSDatumConverter<std::map<T1,T2> >
+  {
+  public:
+    static inline void toString(std::string& s, const std::map<T1,T2>& x, 
+				bool low_precision=false);
+    static inline bool fromString(std::map<T1,T2>& x, const char* s);
+    static inline std::string typeName();
+  };
+
   template<typename T1, typename T2> class VSDatumConverter<std::pair<T1,T2> >
   {
   public:
@@ -254,6 +286,16 @@ namespace VERITAS
     T2 second;
     T3 third;
   };
+
+  template<typename T1, typename T2, typename T3> bool
+  operator< (const triple<T1,T2,T3>& a, const triple<T1,T2,T3>& b)
+  {
+    if(a.first < b.first)return true;
+    else if(b.first < a.first)return false;
+    else if(a.second < b.second)return true;
+    else if(b.second < a.second)return false;
+    return a.third < b.third;
+  } 
 
   template<typename T1, typename T2, typename T3> 
   class VSDatumConverter<triple<T1,T2,T3> >
@@ -287,6 +329,32 @@ namespace VERITAS
     static inline std::string typeName();
   };
   
+  template<typename T>
+  class VSReturnedTypeDatumConverter
+  {
+  public:
+    static inline std::string toString(const T& x, bool low_precision=false)
+    {
+      std::string s;
+      VSDatumConverter<T>::toString(s, x, low_precision);
+      return s;
+    }
+
+    static inline T fromString(const char* s)
+    {
+      T x;
+      VSDatumConverter<T>::fromString(x,s);
+      return x;
+    }
+
+    static inline T fromString(const std::string& s)
+    { 
+      T x;
+      VSDatumConverter<T>::fromString(x,s.c_str());
+      return x;
+    }
+  };
+
   class VSDataConverter
   {
   public:
@@ -303,8 +371,8 @@ namespace VERITAS
     { return VSDatumConverter<T>::fromString(x,s.c_str()); }
     template<typename T> static std::string typeName()
     { return VSDatumConverter<T>::typeName(); }
-    template<typename T> static std::string typeNameOf(const T& __attribute((unused)) x)
-    { return VSDatumConverter<T>::typeName(); }
+    template<typename T> static std::string typeNameOf(const T& x)
+    { (void)x; return VSDatumConverter<T>::typeName(); }
   };
 
 #if 1
@@ -539,7 +607,7 @@ namespace VERITAS
 	   bool low_precision)
   {
     char buffer[19];
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 && !defined(__APPLE__)
     sprintf(buffer,"%lu",x);
 #else
     sprintf(buffer,"%llu",x);
@@ -565,7 +633,7 @@ namespace VERITAS
 	   bool low_precision)
   {
     char buffer[20];
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64 && !defined(__APPLE__)
     sprintf(buffer,"%ld",x);
 #else
     sprintf(buffer,"%lld",x);
@@ -877,6 +945,96 @@ namespace VERITAS
   {
     return
       std::string("vector<")+VSDatumConverter<T>::typeName()+std::string(">");
+  }
+
+  template<typename T> inline void VSDatumConverter<std::list<T> >::
+  toString(std::string& s, const std::list<T>& x, bool low_precision)
+  {
+    std::vector<T> v;
+    v.reserve(x.size());
+    for(typename std::list<T>::const_iterator ix = x.begin(); ix!=x.end(); ix++)
+      v.push_back(*ix);
+    VSDatumConverter<std::vector<T> >::toString(s,v,low_precision);
+  }
+
+  template<typename T> inline bool VSDatumConverter<std::list<T> >::
+  fromString(std::list<T>& x, const char* s)
+  {
+    x.clear();
+    std::vector<T> v;
+    bool result = VSDatumConverter<std::vector<T> >::fromString(v,s);
+    for(typename std::vector<T>::const_iterator iv = v.begin(); 
+	iv!=v.end(); iv++)x.push_front(*iv);
+    return result;
+  }
+
+  template<typename T> inline std::string VSDatumConverter<std::list<T> >::
+  typeName()
+  {
+    return
+      std::string("list<")+VSDatumConverter<T>::typeName()+std::string(">");
+  }
+
+  template<typename T> inline void VSDatumConverter<std::set<T> >::
+  toString(std::string& s, const std::set<T>& x, bool low_precision)
+  {
+    std::vector<T> v;
+    v.reserve(x.size());
+    for(typename std::set<T>::const_iterator ix = x.begin(); ix!=x.end(); ix++)
+      v.push_back(*ix);
+    VSDatumConverter<std::vector<T> >::toString(s,v,low_precision);
+  }
+
+  template<typename T> inline bool VSDatumConverter<std::set<T> >::
+  fromString(std::set<T>& x, const char* s)
+  {
+    x.clear();
+    std::vector<T> v;
+    bool result = VSDatumConverter<std::vector<T> >::fromString(v,s);
+    for(typename std::vector<T>::const_iterator iv = v.begin(); 
+	iv!=v.end(); iv++)x.insert(*iv);
+    return result;
+  }
+
+  template<typename T> inline std::string VSDatumConverter<std::set<T> >::
+  typeName()
+  {
+    return
+      std::string("set<")+VSDatumConverter<T>::typeName()+std::string(">");
+  }
+
+  template<typename T1,typename T2> inline 
+  void VSDatumConverter<std::map<T1,T2> >::
+  toString(std::string& s, const std::map<T1,T2>& x, bool low_precision)
+  {
+    std::vector<std::pair<T1,T2> > v;
+    v.reserve(x.size());
+    for(typename std::map<T1,T2>::const_iterator ix = x.begin(); 
+	ix!=x.end(); ix++)
+      v.push_back(std::make_pair<T1,T2>(ix->first,ix->second));
+    VSDatumConverter<std::vector<std::pair<T1,T2> > >
+      ::toString(s,v,low_precision);
+  }
+
+  template<typename T1,typename T2> inline 
+  bool VSDatumConverter<std::map<T1,T2> >::
+  fromString(std::map<T1,T2>& x, const char* s)
+  {
+    x.clear();
+    std::vector<std::pair<T1,T2> > v;
+    bool result = VSDatumConverter<std::vector<std::pair<T1,T2> > >
+      ::fromString(v,s);
+    for(typename std::vector<std::pair<T1,T2> >::const_iterator iv = v.begin(); 
+	iv!=v.end(); iv++)x[iv->first]=iv->second;
+    return result;
+  }
+
+  template<typename T1,typename T2> inline 
+  std::string VSDatumConverter<std::map<T1,T2> >::typeName()
+  {
+    return std::string("map<")
+      +VSDatumConverter<T1>::typeName()+std::string(",")
+      +VSDatumConverter<T2>::typeName()+std::string(">");
   }
   
 #ifndef _OAWG
