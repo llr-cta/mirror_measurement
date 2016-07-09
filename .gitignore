@@ -1,0 +1,9 @@
+*.o
+*.a
+abs
+dx
+id
+dx_hit
+ip
+reset
+scan

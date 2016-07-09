@@ -2,6 +2,7 @@
 
 #include<cmath>
 #include<map>
+#include<unistd.h>
 
 #include<time.h>
 
@@ -23,24 +24,24 @@ using namespace MotionControl;
 
 struct Abort {};
 
-struct Config 
+struct Config
 {
   typedef ESPProtocol::IAxis IAxis;
   typedef ESPProtocol::IDIO IDIO;
   typedef ESPProtocol::Dist Dist;
 
-  Config(): 
+  Config():
     dev_probe("/dev/ttyS0"), ax_probe_x(0), ax_probe_y(1), ax_probe_z(2),
     ibit_hit(0), ibit_alive(1), bit_hit_value(true), bit_alive_value(true),
     dev_mirror("/dev/ttyS1"), ax_mirror_x(0), ax_mirror_z(1), ax_mirror_t(2),
-    limit_abs_z_bwd(0.0), limit_abs_z_fwd(9999.0), 
+    limit_abs_z_bwd(0.0), limit_abs_z_fwd(9999.0),
     limit_rel_z(0.25), limit_rel_z_zero_est_mult(4),
     seek_step_big(0.1), seek_nstep_big_back(10),
-    seek_step_small(0.001), 
+    seek_step_small(0.001),
     seek_nstep_small_back_first(30), seek_nstep_small_back(10)
   { }
 
-  std::string dev_probe;    
+  std::string dev_probe;
   IAxis       ax_probe_x;
   IAxis       ax_probe_y;
   IAxis       ax_probe_z;
@@ -49,7 +50,7 @@ struct Config
   bool        bit_hit_value;
   bool        bit_alive_value;
 
-  std::string dev_mirror;    
+  std::string dev_mirror;
   IAxis       ax_mirror_x;
   IAxis       ax_mirror_z;
   IAxis       ax_mirror_t;
@@ -85,7 +86,7 @@ void Config::configure(VSOptions& opt)
 		    "available based on previous data. This limit protects "
 		    "the probe from hitting the edge of the mirror or holes "
 		    "in its surface. Specify limit in mm.");
-  opt.findWithValue("limit_rel_z_zero_est_multiplier", 
+  opt.findWithValue("limit_rel_z_zero_est_multiplier",
 		    limit_rel_z_zero_est_mult,
 		    "Multiplier to apply to relative z limit when no data are "
 		    "available to base estimate on.");
@@ -137,7 +138,7 @@ ScanSurfaceEstimator::~ScanSurfaceEstimator()
 class SimpleSurfaceEstimator: public ScanSurfaceEstimator
 {
 public:
-  SimpleSurfaceEstimator(Dist initial_z): 
+  SimpleSurfaceEstimator(Dist initial_z):
     ScanSurfaceEstimator(), m_last_z(initial_z) { }
   virtual ~SimpleSurfaceEstimator();
   virtual int guessZ(int i, int j, Dist& z_est);
@@ -145,13 +146,13 @@ public:
 private:
   typedef std::pair<int,int> IJ;
 
-  bool extrapolate1d2(int i, int j, int di, int dj, Dist& z) const 
+  bool extrapolate1d2(int i, int j, int di, int dj, Dist& z) const
   {
     Map::const_iterator iz1 = m_map.find(IJ(i+1*di,j+1*dj));
     Map::const_iterator iz2 = m_map.find(IJ(i+2*di,j+2*dj));
     Map::const_iterator iz3 = m_map.find(IJ(i+3*di,j+3*dj));
     if(iz1==m_map.end() || iz2==m_map.end() || iz3==m_map.end())return false;
-    
+
     const Dist z1 = iz1->second;
     const Dist z2 = iz2->second;
     const Dist z3 = iz3->second;
@@ -160,12 +161,12 @@ private:
     return true;
   }
 
-  bool extrapolate1d1(int i, int j, int di, int dj, Dist& z) const 
+  bool extrapolate1d1(int i, int j, int di, int dj, Dist& z) const
   {
     Map::const_iterator iz1 = m_map.find(IJ(i+1*di,j+1*dj));
     Map::const_iterator iz2 = m_map.find(IJ(i+2*di,j+2*dj));
     if(iz1==m_map.end() || iz2==m_map.end())return false;
-    
+
     const Dist z1 = iz1->second;
     const Dist z2 = iz2->second;
 
@@ -213,7 +214,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
   unsigned n_sum = 0;
   Dist z_one = 0;
   Dist z_sum = 0;
-  
+
   if(extrapolate1d2(i, j,  1,  0, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d2(i, j,  1,  1, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d2(i, j,  0,  1, z_one))z_sum += z_one, n_sum++;
@@ -227,7 +228,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
       z_est = z_sum/Dist(n_sum);
       return n_sum;
     }
- 
+
   if(extrapolate1d1(i, j,  1,  0, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d1(i, j,  1,  1, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d1(i, j,  0,  1, z_one))z_sum += z_one, n_sum++;
@@ -253,7 +254,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
     }
 
   if(!m_map.empty())
-    {      
+    {
       Map::const_iterator imeas = m_map.begin();
       const IJ* ij = &imeas->first;
       Dist di = Dist(ij->first-i);
@@ -299,7 +300,7 @@ bool isProbeTriggered(ESPProtocol* esp, const Config& C)
   uint8_t port_b_val;
   uint8_t port_c_val;
   esp->getDIOPortState(port_a_val, port_b_val, port_c_val);
-  
+
   if((port_a_val&(0x01<<C.ibit_alive)?true:false)!=C.bit_alive_value)
     {
       std::cerr << "Touch sensor probe not seated or powered off" << std::endl;
@@ -440,7 +441,7 @@ int main(int argc, char** argv)
 
       if(isProbeTriggered(probe_esp,C))
 	{
-	  std::cerr << 
+	  std::cerr <<
 "Probe is triggered at start of data taking which indicates that it is\n"
 "touching mirror or is perhaps disconnected from the ESP-300. Please move\n"
 "probe off of surface and/or check connection to ESP-300. Aborting.\n";
@@ -485,7 +486,7 @@ int main(int argc, char** argv)
       unsigned iscan = 0;
       unsigned ncal = 0;
       bool calibration_last = false;
-      while(loop_iy<ny 
+      while(loop_iy<ny
 	    || ((calib_interval>0)&&((calibration_last==false)||(ncal>0))))
 	{
 	  unsigned iix = loop_ix;
@@ -497,7 +498,7 @@ int main(int argc, char** argv)
 	  if((calib_interval>0)&&((loop_iy>=ny)||(iscan%calib_interval==0))
 	     &&(calibration_last==false)&&(ncal==0))
 	    ncal = calib_xy.size();
-	    
+
 	  bool calibration = (calib_interval>0)&&(ncal>0);
 
 	  unsigned ical = calib_xy.size();
@@ -514,7 +515,7 @@ int main(int argc, char** argv)
 	    }
 
 	  bool excluded = isInExclusionRegion(test_x,test_y,exclusions);
-	  
+
 	  Dist z_est  = C.limit_abs_z_bwd;
 	  Dist z_bwd  = C.limit_abs_z_bwd;
 	  Dist z_fwd  = C.limit_abs_z_bwd;
@@ -527,7 +528,7 @@ int main(int argc, char** argv)
 	      z_fwd  = C.limit_abs_z_bwd;
 	      z_slew = C.limit_abs_z_bwd;
 	    }
-	  else 
+	  else
 	    {
 	      int n_est = 0;
 	      if(calibration)
@@ -537,7 +538,7 @@ int main(int argc, char** argv)
 		      z_est = median(calib_z[ical]);
 		      n_est = calib_z[ical].size();
 		    }
-		  else 
+		  else
 		    {
 		      z_est = C.limit_abs_z_fwd;
 		      n_est = -1;
@@ -552,7 +553,7 @@ int main(int argc, char** argv)
 	      if((calibration)&&(calib_z[ical].empty()))
 		z_bwd = C.limit_abs_z_bwd;
 	      else
-		z_bwd = 
+		z_bwd =
 		  z_est - C.seek_step_big*(double(C.seek_nstep_big_back)+0.8);
 
 	      Dist z_safe = z - C.seek_step_big*double(C.seek_nstep_big_back);
@@ -604,8 +605,8 @@ int main(int argc, char** argv)
 	    }
 
 #if 0
-	  std::cerr << z_est << ' ' << z_bwd << ' ' << z_fwd << ' ' 
-		    << test_y << ' ' << test_x 
+	  std::cerr << z_est << ' ' << z_bwd << ' ' << z_fwd << ' '
+		    << test_y << ' ' << test_x
 		    << std::endl;
 #endif
 
@@ -637,7 +638,7 @@ int main(int argc, char** argv)
 	      if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_x,
 					  C.ibit_hit, x, C.bit_hit_value))
 		{
-		  std::cerr 
+		  std::cerr
 		    << "X-axis motion interrupted by interlock.. aborting"
 		    << std::endl;
 		  throw Abort();
@@ -694,7 +695,7 @@ int main(int argc, char** argv)
 
 	  VSSimpleStat2<Dist> stat;
 	  std::vector<Dist> z_sample; z_sample.reserve(nsample);
-	  
+
 	  bool retracted = false;
 	  for(unsigned isample=0;isample<nsample;isample++)
 	    {
@@ -761,7 +762,7 @@ int main(int argc, char** argv)
 	  std::cerr << x << ' ' << y << ' '
 		    << stat.mean() << ' ' << stat.dev() << ' '
 		    << median(z_sample) << ' ' << z_est << ' ' << z_hit;
-	  
+
 	  for(unsigned isample=0;isample<nsample;isample++)
 	    std::cerr << ' ' << z_sample[isample];
 	  std::cerr << '\n';

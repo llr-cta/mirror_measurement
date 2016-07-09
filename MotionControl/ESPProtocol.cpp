@@ -15,6 +15,7 @@
 
 #include<string>
 #include<sstream>
+#include<unistd.h>
 
 #include<VSDataConverter.hpp>
 #include<Exception.hpp>
@@ -77,7 +78,7 @@ makeSerialDataStream(const std::string& port, unsigned loud, SerialSpeed speed)
     case SS_57600:  baud=B57600;   break;
     case SS_115200: baud=B115200;  break;
     };
-  
+
   struct termios portconfig;
   memset(&portconfig,0,sizeof(portconfig));
   portconfig.c_iflag = IGNBRK;
@@ -118,11 +119,11 @@ getErrorDetails(ErrorCode& errcode, IAxis& erriaxis,
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getErrorDetails() = " 
+    Debug::stream() << "ESPProtocol::getErrorDetails() = "
 		    << VSDataConverter::toString(errcode) << ' '
 		    << erriaxis << ' ' << timestamp << ' ' << message
-		    << std::endl;  
-  return true;  
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::
@@ -140,9 +141,9 @@ getErrorCode(ErrorCode& errcode, IAxis& erriaxis)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getErrorCode() = " 
+    Debug::stream() << "ESPProtocol::getErrorCode() = "
 		    << VSDataConverter::toString(errcode) << ' '
-		    << erriaxis << std::endl;  
+		    << erriaxis << std::endl;
   return true;
 }
 
@@ -164,15 +165,15 @@ getStageModelAndSerial(IAxis iaxis, std::string& model, std::string& serial)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getStageModelAndSerial(" 
-		    << iaxis << ") = " 
-		    << model << ' ' << serial << std::endl;  
+    Debug::stream() << "ESPProtocol::getStageModelAndSerial("
+		    << iaxis << ") = "
+		    << model << ' ' << serial << std::endl;
   return true;
 }
 
 bool ESPProtocol::
 getControllerVersion(ProtocolVersion& protocol_version,
-		     std::string& controller, 
+		     std::string& controller,
 		     unsigned& ver_major, unsigned& ver_minor)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
@@ -183,20 +184,20 @@ getControllerVersion(ProtocolVersion& protocol_version,
   assertNResp(resp,1);
   std::istringstream str(resp[0]);
   str >> controller;
-  
+
   if(controller == "ESP300")
     {
       protocol_version=PV_ESP_300;
-      
+
       std::string version;
       str >> version;
       if(version != "Version")
-	throw ESPProtocolInvalidParameter("Invalid controller version data: " 
+	throw ESPProtocolInvalidParameter("Invalid controller version data: "
 					  + resp[0]);
       char c;
       str >> ver_major >> c >> ver_minor;
     }
-  else 
+  else
     {
       protocol_version=PV_UNKNOWN;
       ver_major = 0;
@@ -208,7 +209,7 @@ getControllerVersion(ProtocolVersion& protocol_version,
     Debug::stream() << "ESPProtocol::getControllerVersion() = "
 		    << VSDataConverter::toString(protocol_version) << ' '
 		    << controller << ' ' << ver_major << ' ' << ver_minor
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -221,7 +222,7 @@ bool ESPProtocol::abortMotion()
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cVoid(CMD(AB)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::abortMotion()" << std::endl;  
+    Debug::stream() << "ESPProtocol::abortMotion()" << std::endl;
   return true;
 }
 
@@ -230,7 +231,7 @@ bool ESPProtocol::abortProgram()
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cVoid(CMD(AP)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::abortProgram()" << std::endl;  
+    Debug::stream() << "ESPProtocol::abortProgram()" << std::endl;
   return true;
 }
 
@@ -255,16 +256,16 @@ bool ESPProtocol::getSerialSpeed(SerialSpeed& speed)
     case 57600:   speed=SS_57600;  break;
     case 115200:  speed=SS_115200; break;
     default:
-      throw ESPProtocolInvalidParameter("Invalid baud rate: " 
+      throw ESPProtocolInvalidParameter("Invalid baud rate: "
 					+ VSDataConverter::toString(ispeed));
       assert(0);
     };
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getSerialSpeed() = " 
+    Debug::stream() << "ESPProtocol::getSerialSpeed() = "
 		    << VSDataConverter::toString(speed)
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -280,8 +281,8 @@ bool ESPProtocol::getDACOffset(IAxis iaxis, double& volts)
 
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::getDACOffset(" << iaxis << ") = " << volts
-		    << std::endl;  
-  return true;  
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::getControllerAddress(unsigned& address)
@@ -296,7 +297,7 @@ bool ESPProtocol::getControllerAddress(unsigned& address)
 
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::getControllerAddress() = " << address
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -321,7 +322,7 @@ bool ESPProtocol::resetController()
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cVoid(CMD(RS)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::resetController()" << std::endl;  
+    Debug::stream() << "ESPProtocol::resetController()" << std::endl;
   return true;
 }
 
@@ -340,8 +341,8 @@ bool ESPProtocol::setSerialSpeed(SerialSpeed speed)
   m_datastream.sendData(cSimple(CMD(BR),ispeed));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::setSerialSpeed(" << ispeed << ')'
-		    << std::endl;  
-  return true;  
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setDACOffset(IAxis iaxis, double volts)
@@ -349,10 +350,10 @@ bool ESPProtocol::setDACOffset(IAxis iaxis, double volts)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(DO),volts));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setDACOffset(" 
+    Debug::stream() << "ESPProtocol::setDACOffset("
 		    << iaxis << ',' << volts << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setControllerAddress(unsigned address)
@@ -361,8 +362,8 @@ bool ESPProtocol::setControllerAddress(unsigned address)
   m_datastream.sendData(cSimple(CMD(SA),address));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::setControllerAddress(" << address << ')'
-		    << std::endl;  
-  return true;      
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::saveSettingsAndProgramsToNonVolatileMemory()
@@ -370,10 +371,10 @@ bool ESPProtocol::saveSettingsAndProgramsToNonVolatileMemory()
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cVoid(CMD(SM)));
   if(m_datastream.loud()>=1)
-    Debug::stream() 
+    Debug::stream()
       << "ESPProtocol::saveSettingsAndProgramsToNonVolatileMemory()"
-      << std::endl;  
-  return true;      
+      << std::endl;
+  return true;
 }
 
 // ============================================================================
@@ -391,7 +392,7 @@ bool ESPProtocol::getLeftTravelLimit(IAxis iaxis, Dist& position)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getLeftTravelLimit(" 
+    Debug::stream() << "ESPProtocol::getLeftTravelLimit("
 		    << iaxis << ") = " << position << std::endl;
   return true;
 }
@@ -407,7 +408,7 @@ bool ESPProtocol::getRightTravelLimit(IAxis iaxis, Dist& position)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getRightTravelLimit(" 
+    Debug::stream() << "ESPProtocol::getRightTravelLimit("
 		    << iaxis << ") = " << position << std::endl;
   return true;
 }
@@ -417,10 +418,10 @@ bool ESPProtocol::setLeftTravelLimit(IAxis iaxis, Dist position)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(SL),position));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setLeftTravelLimit(" 
+    Debug::stream() << "ESPProtocol::setLeftTravelLimit("
 		    << iaxis << ',' << position << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setRightTravelLimit(IAxis iaxis, Dist position)
@@ -428,10 +429,10 @@ bool ESPProtocol::setRightTravelLimit(IAxis iaxis, Dist position)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(SR),position));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setRightTravelLimit(" 
+    Debug::stream() << "ESPProtocol::setRightTravelLimit("
 		    << iaxis << ',' << position << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 // ============================================================================
@@ -449,7 +450,7 @@ bool ESPProtocol::getJerk(IAxis iaxis, Jerk& jerk)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getJerk(" 
+    Debug::stream() << "ESPProtocol::getJerk("
 		    << iaxis << ") = " << jerk << std::endl;
   return true;
 }
@@ -465,7 +466,7 @@ bool ESPProtocol::getAcceleration(IAxis iaxis, Accel& accel)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getAcceleration(" 
+    Debug::stream() << "ESPProtocol::getAcceleration("
 		    << iaxis << ") = " << accel << std::endl;
   return true;
 }
@@ -481,7 +482,7 @@ bool ESPProtocol::getDeceleration(IAxis iaxis, Accel& accel)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getDeceleration(" 
+    Debug::stream() << "ESPProtocol::getDeceleration("
 		    << iaxis << ") = " << accel << std::endl;
   return true;
 }
@@ -497,7 +498,7 @@ bool ESPProtocol::getEmergencyStopDeceleration(IAxis iaxis, Accel& accel)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getEmergencyStopDeceleration(" 
+    Debug::stream() << "ESPProtocol::getEmergencyStopDeceleration("
 		    << iaxis << ") = " << accel << std::endl;
   return true;
 }
@@ -513,7 +514,7 @@ bool ESPProtocol::getMaximumAcceleration(IAxis iaxis, Accel& accel)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getMaximumAcceleration(" 
+    Debug::stream() << "ESPProtocol::getMaximumAcceleration("
 		    << iaxis << ") = " << accel << std::endl;
   return true;
 }
@@ -529,7 +530,7 @@ bool ESPProtocol::getSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getSpeed(" 
+    Debug::stream() << "ESPProtocol::getSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -545,7 +546,7 @@ bool ESPProtocol::getMaximumSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getMaximumSpeed(" 
+    Debug::stream() << "ESPProtocol::getMaximumSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -561,7 +562,7 @@ bool ESPProtocol::getJogHighSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getJogHighSpeed(" 
+    Debug::stream() << "ESPProtocol::getJogHighSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -577,7 +578,7 @@ bool ESPProtocol::getJogLowSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getJogHighSpeed(" 
+    Debug::stream() << "ESPProtocol::getJogHighSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -593,7 +594,7 @@ bool ESPProtocol::getHomeSearchHighSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getHomeSearchHighSpeed(" 
+    Debug::stream() << "ESPProtocol::getHomeSearchHighSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -609,7 +610,7 @@ bool ESPProtocol::getHomeSearchLowSpeed(IAxis iaxis, Vel& speed)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getHomeSearchHighSpeed(" 
+    Debug::stream() << "ESPProtocol::getHomeSearchHighSpeed("
 		    << iaxis << ") = " << speed << std::endl;
   return true;
 }
@@ -633,16 +634,16 @@ bool ESPProtocol::getHomeSearchMode(IAxis iaxis, HomeSearchMode& mode)
     case 5: mode=HSM_LIMIT_POS_AND_INDEX_SIGNALS;    break;
     case 6: mode=HSM_LIMIT_NEG_AND_INDEX_SIGNALS;    break;
     default:
-      throw ESPProtocolInvalidParameter("Invalid home mode: " 
+      throw ESPProtocolInvalidParameter("Invalid home mode: "
 					+ VSDataConverter::toString(imode));
       assert(0);
     };
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getHomeSearchMode(" << iaxis << ") = " 
+    Debug::stream() << "ESPProtocol::getHomeSearchMode(" << iaxis << ") = "
 		    << VSDataConverter::toString(mode)
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -664,15 +665,15 @@ bool ESPProtocol::getTrajectoryMode(IAxis iaxis, TrajectoryMode& mode)
     case 5: mode=TM_SLAVE_TO_MASTER_ACTUAL_POSITION;  break;
     case 6: mode=TM_SLAVE_TO_MASTER_DESIRED_VELOCITY; break;
     default:
-      throw ESPProtocolInvalidParameter("Invalid trajectory mode: " 
+      throw ESPProtocolInvalidParameter("Invalid trajectory mode: "
 					+ VSDataConverter::toString(imode));
       assert(0);
     };
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getTrajectoryMode(" << iaxis << ") = " 
-		    << VSDataConverter::toString(mode) << std::endl;  
+    Debug::stream() << "ESPProtocol::getTrajectoryMode(" << iaxis << ") = "
+		    << VSDataConverter::toString(mode) << std::endl;
   return true;
 }
 
@@ -681,10 +682,10 @@ bool ESPProtocol::setJerk(IAxis iaxis, Jerk jerk)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(JK),jerk));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setJerk(" 
+    Debug::stream() << "ESPProtocol::setJerk("
 		    << iaxis << ',' << jerk << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setAcceleration(IAxis iaxis, Accel accel)
@@ -692,111 +693,111 @@ bool ESPProtocol::setAcceleration(IAxis iaxis, Accel accel)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(AC),accel));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setAcceleration(" 
+    Debug::stream() << "ESPProtocol::setAcceleration("
 		    << iaxis << ',' << accel << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setDeceleration(IAxis iaxis, Accel accel)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(AG),accel));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setDeceleration(" 
+    Debug::stream() << "ESPProtocol::setDeceleration("
 		    << iaxis << ',' << accel << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setEmergencyStopDeceleration(IAxis iaxis, Accel accel)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(AE),accel));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setEmergencyStopDeceleration(" 
+    Debug::stream() << "ESPProtocol::setEmergencyStopDeceleration("
 		    << iaxis << ',' << accel << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setMaximumAcceleration(IAxis iaxis, Accel accel)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(AU),accel));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setMaximumAcceleration(" 
+    Debug::stream() << "ESPProtocol::setMaximumAcceleration("
 		    << iaxis << ',' << accel << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(VA),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setSpeed(" 
+    Debug::stream() << "ESPProtocol::setSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setMaximumSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(VU),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setMaximumSpeed(" 
+    Debug::stream() << "ESPProtocol::setMaximumSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setJogHighSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(JH),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setJogHighSpeed(" 
+    Debug::stream() << "ESPProtocol::setJogHighSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setJogLowSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(JW),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setJogLowSpeed(" 
+    Debug::stream() << "ESPProtocol::setJogLowSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setHomeSearchHighSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(OH),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setHomeSearchHighSpeed(" 
+    Debug::stream() << "ESPProtocol::setHomeSearchHighSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setHomeSearchLowSpeed(IAxis iaxis, Vel speed)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(OL),speed));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setHomeSearchLowSpeed(" 
+    Debug::stream() << "ESPProtocol::setHomeSearchLowSpeed("
 		    << iaxis << ',' << speed << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
-    
+
 bool ESPProtocol::setHomeSearchMode(IAxis iaxis, HomeSearchMode mode)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
@@ -818,8 +819,8 @@ bool ESPProtocol::setHomeSearchMode(IAxis iaxis, HomeSearchMode mode)
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::setHomeSearchMode("
 		    << iaxis << ',' << imode << ')'
-		    << std::endl;  
-  return true;      
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setTrajectoryMode(IAxis iaxis, TrajectoryMode mode)
@@ -839,8 +840,8 @@ bool ESPProtocol::setTrajectoryMode(IAxis iaxis, TrajectoryMode mode)
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::setTrajectoryMode("
 		    << iaxis << ',' << imode << ')'
-		    << std::endl;  
-  return true;      
+		    << std::endl;
+  return true;
 }
 
 // ============================================================================
@@ -859,7 +860,7 @@ getAssignDIOToExecuteStoredProgram(IDIO idio, IProgram iprog)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getAssignDIOToExecuteStoredProgram(" 
+    Debug::stream() << "ESPProtocol::getAssignDIOToExecuteStoredProgram("
 		    << idio << ") = " << iprog << std::endl;
   return true;
 }
@@ -876,7 +877,7 @@ getAssignDIOToInhibitMotion(IAxis iaxis, IDIO& idio, bool& level)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getAssignDIOToInhibitMotion(" 
+    Debug::stream() << "ESPProtocol::getAssignDIOToInhibitMotion("
 		    << iaxis << ") = " << idio << ' ' << level << std::endl;
   return true;
 }
@@ -893,7 +894,7 @@ getAssignDIOToNotifyMotionStatus(IAxis iaxis, IDIO& idio, bool& level)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getAssignDIOToNotifyMotionStatus(" 
+    Debug::stream() << "ESPProtocol::getAssignDIOToNotifyMotionStatus("
 		    << iaxis << ") = " << idio << ' ' << level << std::endl;
   return true;
 }
@@ -910,7 +911,7 @@ getAssignDIOForJogMode(IAxis iaxis, IDIO& idio_neg, IDIO& idio_pos)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getAssignDIOForJogMode(" 
+    Debug::stream() << "ESPProtocol::getAssignDIOForJogMode("
 		    << iaxis << ") = " << idio_neg << ' ' << idio_pos
 		    << std::endl;
   return true;
@@ -927,9 +928,9 @@ bool ESPProtocol::getEnableDIOToInhibitMotion(IAxis iaxis, bool& enable)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getEnableDIOToInhibitMotion(" 
+    Debug::stream() << "ESPProtocol::getEnableDIOToInhibitMotion("
 		    << iaxis << ") = " << enable << std::endl;
-  return true;  
+  return true;
 }
 
 bool ESPProtocol::getEnableDIOToNotifyMotionStatus(IAxis iaxis, bool& enable)
@@ -943,9 +944,9 @@ bool ESPProtocol::getEnableDIOToNotifyMotionStatus(IAxis iaxis, bool& enable)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getEnableDIOToNotifyMotionStatus(" 
+    Debug::stream() << "ESPProtocol::getEnableDIOToNotifyMotionStatus("
 		    << iaxis << ") = " << enable << std::endl;
-  return true;  
+  return true;
 }
 
 bool ESPProtocol::getEnableDIOForJogMode(IAxis iaxis, bool& enable)
@@ -959,12 +960,12 @@ bool ESPProtocol::getEnableDIOForJogMode(IAxis iaxis, bool& enable)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getEnableDIOForJogMode(" 
+    Debug::stream() << "ESPProtocol::getEnableDIOForJogMode("
 		    << iaxis << ") = " << enable << std::endl;
-  return true;  
+  return true;
 }
 
-bool ESPProtocol::getDIOPortDirection(bool& port_a_op, bool& port_b_op, 
+bool ESPProtocol::getDIOPortDirection(bool& port_a_op, bool& port_b_op,
 				      bool& port_c_op)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
@@ -980,13 +981,13 @@ bool ESPProtocol::getDIOPortDirection(bool& port_a_op, bool& port_b_op,
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getDIOPortDirection() = " 
+    Debug::stream() << "ESPProtocol::getDIOPortDirection() = "
 		    << port_a_op << ' ' << port_b_op << ' ' << port_c_op
 		    << std::endl;
-  return true;  
+  return true;
 }
 
-bool ESPProtocol::getDIOPortState(uint8_t& port_a_val, uint8_t& port_b_val, 
+bool ESPProtocol::getDIOPortState(uint8_t& port_a_val, uint8_t& port_b_val,
 				  uint8_t& port_c_val)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
@@ -1015,7 +1016,7 @@ bool ESPProtocol::getDIOPortState(uint8_t& port_a_val, uint8_t& port_b_val,
       Debug::stream() << std::endl;
     }
 
-  return true;  
+  return true;
 }
 
 bool ESPProtocol::
@@ -1024,9 +1025,9 @@ setAssignDIOToExecuteStoredProgram(IDIO idio, IProgram iprog)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(idio,CMD(BG),iprog));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setAssignDIOToExecuteStoredProgram(" 
+    Debug::stream() << "ESPProtocol::setAssignDIOToExecuteStoredProgram("
 		    << idio << ',' << iprog << ')'
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -1036,10 +1037,10 @@ setAssignDIOToInhibitMotion(IAxis iaxis, IDIO idio, bool level)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimplePair(iaxis,CMD(BK),idio,level));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setAssignDIOToInhibitMotion(" 
+    Debug::stream() << "ESPProtocol::setAssignDIOToInhibitMotion("
 		    << iaxis << ',' << idio << ',' << level << ')'
-		    << std::endl;  
-  return true;  
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::
@@ -1048,10 +1049,10 @@ setAssignDIOToNotifyMotionStatus(IAxis iaxis, IDIO idio, bool level)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimplePair(iaxis,CMD(BM),idio,level));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setAssignDIOToNotifyMotionStatus(" 
+    Debug::stream() << "ESPProtocol::setAssignDIOToNotifyMotionStatus("
 		    << iaxis << ',' << idio << ',' << level << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::
@@ -1060,10 +1061,10 @@ setAssignDIOForJogMode(IAxis iaxis, IDIO idio_neg, IDIO idio_pos)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimplePair(iaxis,CMD(BP),idio_neg,idio_pos));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setAssignDIOForJogMode(" 
+    Debug::stream() << "ESPProtocol::setAssignDIOForJogMode("
 		    << iaxis << ',' << idio_neg << ',' << idio_pos << ')'
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setEnableDIOToInhibitMotion(IAxis iaxis, bool enable)
@@ -1071,9 +1072,9 @@ bool ESPProtocol::setEnableDIOToInhibitMotion(IAxis iaxis, bool enable)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(BL),enable));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setEnableDIOToInhibitMotion(" 
-		    << iaxis << ',' << enable << ')' << std::endl;  
-  return true;    
+    Debug::stream() << "ESPProtocol::setEnableDIOToInhibitMotion("
+		    << iaxis << ',' << enable << ')' << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setEnableDIOToNotifyMotionStatus(IAxis iaxis, bool enable)
@@ -1081,9 +1082,9 @@ bool ESPProtocol::setEnableDIOToNotifyMotionStatus(IAxis iaxis, bool enable)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(BN),enable));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setEnableDIOToNotifyMotionStatus(" 
-		    << iaxis << ',' << enable << ')' << std::endl;  
-  return true;    
+    Debug::stream() << "ESPProtocol::setEnableDIOToNotifyMotionStatus("
+		    << iaxis << ',' << enable << ')' << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setEnableDIOForJogMode(IAxis iaxis, bool enable)
@@ -1091,27 +1092,27 @@ bool ESPProtocol::setEnableDIOForJogMode(IAxis iaxis, bool enable)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(BQ),enable));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setEnableDIOForJogMode(" 
-		    << iaxis << ',' << enable << ')' << std::endl;  
-  return true;    
+    Debug::stream() << "ESPProtocol::setEnableDIOForJogMode("
+		    << iaxis << ',' << enable << ')' << std::endl;
+  return true;
 }
 
 bool ESPProtocol::setDIOPortDirection(bool port_a_op, bool port_b_op,
 				      bool port_c_op)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
-  unsigned reg = ( ((port_a_op)?0x01:0x00) 
+  unsigned reg = ( ((port_a_op)?0x01:0x00)
 		   | ((port_b_op)?0x02:0x00)
 		   | ((port_c_op)?0x04:0x00) );
   m_datastream.sendData(cHex(CMD(BO),reg));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::setDIOPortDirection(" 
+    Debug::stream() << "ESPProtocol::setDIOPortDirection("
 		    << port_a_op << ',' << port_b_op << ',' << port_c_op
-		    << ')' << std::endl;  
+		    << ')' << std::endl;
   return true;
 }
 
-bool ESPProtocol::setDIOPortState(uint8_t port_a_val, uint8_t port_b_val, 
+bool ESPProtocol::setDIOPortState(uint8_t port_a_val, uint8_t port_b_val,
 				  uint8_t port_c_val)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
@@ -1130,7 +1131,7 @@ bool ESPProtocol::setDIOPortState(uint8_t port_a_val, uint8_t port_b_val,
       Debug::stream() << ',';
       for(unsigned ibit=0;ibit<8;ibit++)
 	Debug::stream() << (((port_c_val>>(7-ibit))&0x01)?1:0);
-      Debug::stream() << ')' << std::endl;  
+      Debug::stream() << ')' << std::endl;
     }
   return true;
 }
@@ -1159,7 +1160,7 @@ bool ESPProtocol::getHardwareStatus(HardwareStatus& status)
       status.axis[iaxis].signal_home     = (reg2&(1<<(iaxis+0)));
       status.axis[iaxis].signal_index    = (reg2&(1<<(iaxis+8)));
     }
-  
+
   status.emergency_stop_unlatched_100pin = (reg1&(1<<27));
   status.emergency_stop_unlatched_aux_io = (reg1&(1<<28));
   status.emergency_stop_latched_100pin   = (reg1&(1<<29));
@@ -1179,7 +1180,7 @@ bool ESPProtocol::getHardwareStatus(HardwareStatus& status)
       for(unsigned iaxis=0;iaxis<status.axis.size();iaxis++)
 	{
 	  if(iaxis)Debug::stream() << ',';
-	  Debug::stream() << '(' 
+	  Debug::stream() << '('
 			  << (status.axis[iaxis].limit_pos?1:0) << ','
 			  << (status.axis[iaxis].limit_neg?1:0) << ','
 			  << (status.axis[iaxis].amplifier_fault?1:0) << ','
@@ -1199,7 +1200,7 @@ bool ESPProtocol::getHardwareStatus(HardwareStatus& status)
 	  if(idip)Debug::stream() << ',';
 	  Debug::stream() << (status.axis[idip].limit_pos?1:0);
 	}
-      
+
       Debug::stream() << std::endl;
     }
   return true;
@@ -1336,7 +1337,7 @@ bool ESPProtocol::getDesiredVelocity(IAxis iaxis, Vel& velocity)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getDesiredVelocity(" << iaxis << ") = " 
+    Debug::stream() << "ESPProtocol::getDesiredVelocity(" << iaxis << ") = "
 		    << velocity << std::endl;
   return true;
 }
@@ -1400,7 +1401,7 @@ bool ESPProtocol::getMoveToHWTravelLimitDone(IAxis iaxis, bool& done)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getMoveToHWTravelLimitDone(" << iaxis 
+    Debug::stream() << "ESPProtocol::getMoveToHWTravelLimitDone(" << iaxis
 		    << ") = " << done << std::endl;
   return true;
 }
@@ -1416,7 +1417,7 @@ bool ESPProtocol::getMoveIndefinitelyDone(IAxis iaxis, bool& done)
   // --------------------------------------------------------------------------
 
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::getMoveIndefinitelyDone(" << iaxis 
+    Debug::stream() << "ESPProtocol::getMoveIndefinitelyDone(" << iaxis
 		    << ") = " << done << std::endl;
   return true;
 }
@@ -1442,8 +1443,8 @@ bool ESPProtocol::cmdMotorOn(IAxis iaxis)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iaxis,CMD(MO)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::cmdMotorOn(" << iaxis << ")" 
-		    << std::endl;  
+    Debug::stream() << "ESPProtocol::cmdMotorOn(" << iaxis << ")"
+		    << std::endl;
   return true;
 }
 
@@ -1452,8 +1453,8 @@ bool ESPProtocol::cmdMotorOff(IAxis iaxis)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iaxis,CMD(MF)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::cmdMotorOff(" << iaxis << ")" 
-		    << std::endl;  
+    Debug::stream() << "ESPProtocol::cmdMotorOff(" << iaxis << ")"
+		    << std::endl;
   return true;
 }
 
@@ -1463,8 +1464,8 @@ bool ESPProtocol::cmdMoveToHWTravelLimit(IAxis iaxis, Direction direction)
   const char* cmd = (direction==D_POS)?CMD(MT) "+":CMD(MT) "-";
   m_datastream.sendData(cAxisVoid(iaxis,cmd));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::cmdMoveToHWTravelLimit(" << iaxis 
-		    << ',' << cmd[2] << ')' << std::endl;  
+    Debug::stream() << "ESPProtocol::cmdMoveToHWTravelLimit(" << iaxis
+		    << ',' << cmd[2] << ')' << std::endl;
   return true;
 }
 
@@ -1475,7 +1476,7 @@ bool ESPProtocol::cmdMoveIndefinitely(IAxis iaxis, Direction direction)
   m_datastream.sendData(cAxisVoid(iaxis,cmd));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdMoveIndefinitely(" << iaxis
-		    << ',' << cmd[2] << ')' << std::endl;  
+		    << ',' << cmd[2] << ')' << std::endl;
   return true;
 }
 
@@ -1486,7 +1487,7 @@ bool ESPProtocol::cmdMoveToNearestIndex(IAxis iaxis, Direction direction)
   m_datastream.sendData(cAxisVoid(iaxis,cmd));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdMoveToNearestIndex(" << iaxis
-		    << ',' << cmd[2] << ')' << std::endl;  
+		    << ',' << cmd[2] << ')' << std::endl;
   return true;
 }
 
@@ -1514,8 +1515,8 @@ bool ESPProtocol::cmdMoveSearchForHome(IAxis iaxis, HomeSearchMode mode)
     }
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdMoveSearchForHome(" << iaxis
-		    << ',' << VSDataConverter::toString(mode) 
-		    << ')' << std::endl;  
+		    << ',' << VSDataConverter::toString(mode)
+		    << ')' << std::endl;
   return true;
 }
 
@@ -1525,7 +1526,7 @@ bool ESPProtocol::cmdMoveToAbsolutePosition(IAxis iaxis, Dist position)
   m_datastream.sendData(cAxisSimple(iaxis,CMD(PA),position));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdMoveToAbsolutePosition(" << iaxis
-		    << ',' << position << ')' << std::endl;  
+		    << ',' << position << ')' << std::endl;
   return true;
 }
 
@@ -1535,7 +1536,7 @@ bool ESPProtocol::cmdMoveToRelativePosition(IAxis iaxis, Dist position)
   m_datastream.sendData(cAxisSimple(iaxis,CMD(PR),position));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdMoveToRelativePosition(" << iaxis
-		    << ',' << position << ')' << std::endl;  
+		    << ',' << position << ')' << std::endl;
   return true;
 }
 
@@ -1544,8 +1545,8 @@ bool ESPProtocol::cmdStopMotion(IAxis iaxis)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iaxis,CMD(ST)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::cmdStopMotion(" << iaxis << ')' 
-		    << std::endl;  
+    Debug::stream() << "ESPProtocol::cmdStopMotion(" << iaxis << ')'
+		    << std::endl;
   return true;
 }
 
@@ -1558,9 +1559,9 @@ bool ESPProtocol::progBeginDownload(IProgram iprog)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iprog,CMD(EP)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::progBeginDownload(" << iprog << ')' 
-		    << std::endl;  
-  return true;  
+    Debug::stream() << "ESPProtocol::progBeginDownload(" << iprog << ')'
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::progFinishDownload()
@@ -1568,8 +1569,8 @@ bool ESPProtocol::progFinishDownload()
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cVoid(CMD(QP)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::progFinishDownload()" << std::endl;  
-  return true;    
+    Debug::stream() << "ESPProtocol::progFinishDownload()" << std::endl;
+  return true;
 }
 
 bool ESPProtocol::progDelete(IProgram iprog)
@@ -1577,9 +1578,9 @@ bool ESPProtocol::progDelete(IProgram iprog)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iprog,CMD(XX)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::progDelete(" << iprog << ')' 
-		    << std::endl;  
-  return true;    
+    Debug::stream() << "ESPProtocol::progDelete(" << iprog << ')'
+		    << std::endl;
+  return true;
 }
 
 #if 0
@@ -1587,7 +1588,7 @@ bool ESPProtocol::progList(IProgram iprog)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(iprog,CMD(LP)));
-  
+
 }
 #endif
 
@@ -1597,8 +1598,8 @@ bool ESPProtocol::progPurgeNonVolatileMemory()
   m_datastream.sendData(cVoid(CMD(0XX)));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::progPurgeNonVolatileMemory()"
-		    << std::endl;  
-  return true;    
+		    << std::endl;
+  return true;
 }
 
 bool ESPProtocol::
@@ -1608,8 +1609,8 @@ progAutomaticExecutionOnPowerOn(IProgram iprog, unsigned ncycle)
   m_datastream.sendData(cAxisSimple(iprog,CMD(EO),ncycle));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::progAutomaticExecutionOnPowerOn("
-		    << iprog << ',' << ncycle << ')' << std::endl;  
-  return true;  
+		    << iprog << ',' << ncycle << ')' << std::endl;
+  return true;
 }
 
 bool ESPProtocol::progDefineLabel(ILabel ilabel)
@@ -1617,8 +1618,8 @@ bool ESPProtocol::progDefineLabel(ILabel ilabel)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisVoid(ilabel,CMD(DL)));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::progDefineLabel(" << ilabel << ')' 
-		    << std::endl;  
+    Debug::stream() << "ESPProtocol::progDefineLabel(" << ilabel << ')'
+		    << std::endl;
   return true;
 }
 
@@ -1628,7 +1629,7 @@ bool ESPProtocol::progJumpToLabel(ILabel ilabel, unsigned ncycle)
   m_datastream.sendData(cAxisSimple(ilabel,CMD(JL),ncycle));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::progJumpToLabel(" << ilabel
-		    << ',' << ncycle << ')' << std::endl;  
+		    << ',' << ncycle << ')' << std::endl;
   return true;
 }
 
@@ -1639,7 +1640,7 @@ bool ESPProtocol::cmdExecuteProgram(IProgram iprog, unsigned ncycle)
   m_datastream.sendData(cAxisSimple(iprog,CMD(EX),ncycle));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::cmdExecuteProgram(" << iprog
-		    << ',' << ncycle << ')' << std::endl;  
+		    << ',' << ncycle << ')' << std::endl;
   return true;
 }
 
@@ -1652,8 +1653,8 @@ bool ESPProtocol::waitForAbsolutePositionCrossing(IAxis iaxis, Dist position)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
   m_datastream.sendData(cAxisSimple(iaxis,CMD(WP),position));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::waitForAbsolutePositionCrossing(" 
-		    << iaxis << ',' << position << ')' << std::endl;  
+    Debug::stream() << "ESPProtocol::waitForAbsolutePositionCrossing("
+		    << iaxis << ',' << position << ')' << std::endl;
   return true;
 }
 
@@ -1665,8 +1666,8 @@ bool ESPProtocol::waitForMotionDone(IAxis iaxis, TimeMS delay)
   else
     m_datastream.sendData(cAxisSimple(iaxis,CMD(WS),delay));
   if(m_datastream.loud()>=1)
-    Debug::stream() << "ESPProtocol::waitForMotionDone(" 
-		    << iaxis << ',' << delay << ')' << std::endl;  
+    Debug::stream() << "ESPProtocol::waitForMotionDone("
+		    << iaxis << ',' << delay << ')' << std::endl;
   return true;
 }
 
@@ -1676,7 +1677,7 @@ bool ESPProtocol::waitForTime(TimeMS delay)
   m_datastream.sendData(cSimple(CMD(WT),delay));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::waitForTime(" << delay << ')'
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -1686,7 +1687,7 @@ bool ESPProtocol::waitForDIOBitLo(IDIO idio)
   m_datastream.sendData(cAxisVoid(idio,CMD(UL)));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::waitForDIOBitLo(" << idio << ')'
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
@@ -1696,18 +1697,18 @@ bool ESPProtocol::waitForDIOBitHi(IDIO idio)
   m_datastream.sendData(cAxisVoid(idio,CMD(UH)));
   if(m_datastream.loud()>=1)
     Debug::stream() << "ESPProtocol::waitForDIOBitHi(" << idio << ')'
-		    << std::endl;  
+		    << std::endl;
   return true;
 }
 
 // ============================================================================
 // SIMPLE IDIOMS
 // ============================================================================
-    
+
 void ESPProtocol::clearAllErrorCodes()
 {
   ESPProtocol::ErrorCode errorcode;
-  ESPProtocol::IAxis erroraxis;      
+  ESPProtocol::IAxis erroraxis;
   getErrorCode(errorcode,erroraxis);
   while(errorcode!=ESPProtocol::EC_NONE)getErrorCode(errorcode,erroraxis);
 }
@@ -1716,7 +1717,7 @@ void ESPProtocol::getAllErrorCodes(ErrorList& list)
 {
   list.clear();
   ESPProtocol::ErrorCode errorcode;
-  ESPProtocol::IAxis erroraxis;      
+  ESPProtocol::IAxis erroraxis;
   getErrorCode(errorcode,erroraxis);
   while(errorcode!=ESPProtocol::EC_NONE)
     {
@@ -1740,7 +1741,7 @@ bool ESPProtocol::testForAndClearAllErrors(ErrorList& list)
 
 void ESPProtocol::pollForMotionDone(IAxis iaxis, TimeUS delay_us)
 {
-  bool done = false; 
+  bool done = false;
   getMotionDone(iaxis,done);
   while(!done)
     {
@@ -1775,9 +1776,9 @@ cmdProtectedMoveToAbsolutePosition(IAxis iaxis, IDIO ibit,
 // ============================================================================
 // ============================================================================
 // ============================================================================
-// 
+//
 // PROTECTED FUNCTIONS
-// 
+//
 // ============================================================================
 // ============================================================================
 // ============================================================================
