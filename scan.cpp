@@ -498,6 +498,7 @@ int main(int argc, char** argv)
       probe_esp->cmdMotorOn(C.ax_probe_z);
       usleep(100000);
 
+#if 0
       for(std::string::iterator ichar = power_down_axes.begin();
           ichar != power_down_axes.end(); ichar++)
         {
@@ -531,6 +532,14 @@ int main(int argc, char** argv)
           	  << progname << ": should have been caught before scanning started."
           	  << std::endl;
         }
+#else
+      mirror_esp->cmdMotorOn(C.ax_mirror_x);
+      usleep(100000);
+      mirror_esp->cmdMotorOn(C.ax_mirror_z);
+      usleep(100000);
+      mirror_esp->cmdMotorOn(C.ax_mirror_t);
+      usleep(100000);
+#endif
 
       probe_esp->setEnableDIOToInhibitMotion(C.ax_probe_x, false);
       probe_esp->setEnableDIOToInhibitMotion(C.ax_probe_y, false);
