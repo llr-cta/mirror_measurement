@@ -25,24 +25,24 @@ using namespace MotionControl;
 
 struct Abort {};
 
-struct Config 
+struct Config
 {
   typedef ESPProtocol::IAxis IAxis;
   typedef ESPProtocol::IDIO IDIO;
   typedef ESPProtocol::Dist Dist;
 
-  Config(): 
+  Config():
     dev_probe("/dev/ttyUSB0"), ax_probe_x(0), ax_probe_y(1), ax_probe_z(2),
     ibit_hit(0), ibit_alive(1), bit_hit_value(true), bit_alive_value(true),
     dev_mirror("/dev/ttyUSB1"), ax_mirror_x(0), ax_mirror_z(1), ax_mirror_t(2),
-    limit_abs_z_bwd(0.0), limit_abs_z_fwd(9999.0), 
+    limit_abs_z_bwd(0.0), limit_abs_z_fwd(9999.0),
     limit_rel_z(0.25), limit_rel_z_zero_est_mult(4),
     seek_step_big(0.1), seek_nstep_big_back(10),
-    seek_step_small(0.001), 
+    seek_step_small(0.001),
     seek_nstep_small_back_first(30), seek_nstep_small_back(10)
   { }
 
-  std::string dev_probe;    
+  std::string dev_probe;
   IAxis       ax_probe_x;
   IAxis       ax_probe_y;
   IAxis       ax_probe_z;
@@ -51,7 +51,7 @@ struct Config
   bool        bit_hit_value;
   bool        bit_alive_value;
 
-  std::string dev_mirror;    
+  std::string dev_mirror;
   IAxis       ax_mirror_x;
   IAxis       ax_mirror_z;
   IAxis       ax_mirror_t;
@@ -74,41 +74,41 @@ struct Config
 void Config::configure(VSOptions& opt)
 {
   opt.findWithValue("limit_abs_z_bwd",limit_abs_z_bwd,
-		    "Set the absolute limit on motion in the negative-z "
-		    "direction. This limit can be used to stop the probe "
-		    "mounting from impacting the actuator. It is also used to "
-		    "slew over obstacles on the mirror. Specify limit in mm.");
+      "Set the absolute limit on motion in the negative-z "
+      "direction. This limit can be used to stop the probe "
+      "mounting from impacting the actuator. It is also used to "
+      "slew over obstacles on the mirror. Specify limit in mm.");
   opt.findWithValue("limit_abs_z_fwd",limit_abs_z_fwd,
-		    "Set the absolute limit on motion in the positive-z "
-		    "direction. Limit should be given in mm.");
+      "Set the absolute limit on motion in the positive-z "
+      "direction. Limit should be given in mm.");
   opt.findWithValue("limit_rel_z",limit_rel_z,
-		    "Set the limit on motion in the positive-z direction past "
-		    "the estimated mirror surface when good estimates are "
-		    "available based on previous data. This limit protects "
-		    "the probe from hitting the edge of the mirror or holes "
-		    "in its surface. Specify limit in mm.");
-  opt.findWithValue("limit_rel_z_zero_est_multiplier", 
-		    limit_rel_z_zero_est_mult,
-		    "Multiplier to apply to relative z limit when no data are "
-		    "available to base estimate on.");
+      "Set the limit on motion in the positive-z direction past "
+      "the estimated mirror surface when good estimates are "
+      "available based on previous data. This limit protects "
+      "the probe from hitting the edge of the mirror or holes "
+      "in its surface. Specify limit in mm.");
+  opt.findWithValue("limit_rel_z_zero_est_multiplier",
+      limit_rel_z_zero_est_mult,
+      "Multiplier to apply to relative z limit when no data are "
+      "available to base estimate on.");
 
   opt.findWithValue("seek_step_big",seek_step_big,
-		    "Size of large forward step when searching for mirror "
-		    "surface (in mm).");
+      "Size of large forward step when searching for mirror "
+      "surface (in mm).");
   opt.findWithValue("seek_nstep_big_back",seek_nstep_big_back,
-		    "Number of large steps to make backwards when moving from "
-		    "place to place on the mirror.");
+      "Number of large steps to make backwards when moving from "
+      "place to place on the mirror.");
 
   opt.findWithValue("seek_step_small",seek_step_small,
-		    "Size of small step used when finding mirror surface.");
+      "Size of small step used when finding mirror surface.");
   opt.findWithValue("seek_nstep_small_back_first",
-		    seek_nstep_small_back_first,
-		    "Number of small steps away from estimated mirror that "
-		    "probe should be positioned after first slewing to new "
-		    "mirror point.");
+      seek_nstep_small_back_first,
+      "Number of small steps away from estimated mirror that "
+      "probe should be positioned after first slewing to new "
+      "mirror point.");
   opt.findWithValue("seek_nstep_small_back",seek_nstep_small_back,
-		    "Number of small steps to make away from mirror when "
-		    "making muliple samples.");
+      "Number of small steps to make away from mirror when "
+      "making muliple samples.");
 
   seek_step_big = std::min(seek_step_big, 0.5);
 
@@ -139,7 +139,7 @@ ScanSurfaceEstimator::~ScanSurfaceEstimator()
 class SimpleSurfaceEstimator: public ScanSurfaceEstimator
 {
 public:
-  SimpleSurfaceEstimator(Dist initial_z): 
+  SimpleSurfaceEstimator(Dist initial_z):
     ScanSurfaceEstimator(), m_last_z(initial_z) { }
   virtual ~SimpleSurfaceEstimator();
   virtual int guessZ(int i, int j, Dist& z_est);
@@ -147,13 +147,13 @@ public:
 private:
   typedef std::pair<int,int> IJ;
 
-  bool extrapolate1d2(int i, int j, int di, int dj, Dist& z) const 
+  bool extrapolate1d2(int i, int j, int di, int dj, Dist& z) const
   {
     Map::const_iterator iz1 = m_map.find(IJ(i+1*di,j+1*dj));
     Map::const_iterator iz2 = m_map.find(IJ(i+2*di,j+2*dj));
     Map::const_iterator iz3 = m_map.find(IJ(i+3*di,j+3*dj));
     if(iz1==m_map.end() || iz2==m_map.end() || iz3==m_map.end())return false;
-    
+
     const Dist z1 = iz1->second;
     const Dist z2 = iz2->second;
     const Dist z3 = iz3->second;
@@ -162,12 +162,12 @@ private:
     return true;
   }
 
-  bool extrapolate1d1(int i, int j, int di, int dj, Dist& z) const 
+  bool extrapolate1d1(int i, int j, int di, int dj, Dist& z) const
   {
     Map::const_iterator iz1 = m_map.find(IJ(i+1*di,j+1*dj));
     Map::const_iterator iz2 = m_map.find(IJ(i+2*di,j+2*dj));
     if(iz1==m_map.end() || iz2==m_map.end())return false;
-    
+
     const Dist z1 = iz1->second;
     const Dist z2 = iz2->second;
 
@@ -215,7 +215,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
   unsigned n_sum = 0;
   Dist z_one = 0;
   Dist z_sum = 0;
-  
+
   if(extrapolate1d2(i, j,  1,  0, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d2(i, j,  1,  1, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d2(i, j,  0,  1, z_one))z_sum += z_one, n_sum++;
@@ -229,7 +229,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
       z_est = z_sum/Dist(n_sum);
       return n_sum;
     }
- 
+
   if(extrapolate1d1(i, j,  1,  0, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d1(i, j,  1,  1, z_one))z_sum += z_one, n_sum++;
   if(extrapolate1d1(i, j,  0,  1, z_one))z_sum += z_one, n_sum++;
@@ -255,7 +255,7 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
     }
 
   if(!m_map.empty())
-    {      
+    {
       Map::const_iterator imeas = m_map.begin();
       const IJ* ij = &imeas->first;
       Dist di = Dist(ij->first-i);
@@ -264,14 +264,14 @@ int SimpleSurfaceEstimator::guessZ(int i, int j, Dist& z_est)
       Dist z_min = imeas->second;
       imeas++;
       while(imeas != m_map.end())
-	{
-	  ij = &imeas->first;
-	  di = Dist(ij->first-i);
-	  dj = Dist(ij->second-j);
-	  Dist d2 = SQR(di)+SQR(dj);
-	  if(d2 < d2_min)d2_min=d2, z_min=imeas->second;
-	  imeas++;
-	}
+  {
+    ij = &imeas->first;
+    di = Dist(ij->first-i);
+    dj = Dist(ij->second-j);
+    Dist d2 = SQR(di)+SQR(dj);
+    if(d2 < d2_min)d2_min=d2, z_min=imeas->second;
+    imeas++;
+  }
       z_est = z_min;
       return 1;
     }
@@ -290,7 +290,7 @@ void usage(const std::string& progname, const VSOptions& options,
            std::ostream& stream)
 {
   stream << "Usage: " << progname  << " [options] [--] x_range y_range\n\n"
-	 << "Where x_range and y_range specify the size of the scanned region in mm\n\nNOTE: To specify a negative value of x_range or y_range you MUST terminate the\noptions processing using a double hyphen (--) before x_range, otherwise the\nthe negative value will be treated as an option.\n\n";
+   << "Where x_range and y_range specify the size of the scanned region in mm\n\nNOTE: To specify a negative value of x_range or y_range you MUST terminate the\noptions processing using a double hyphen (--) before x_range, otherwise the\nthe negative value will be treated as an option.\n\n";
   stream << "Options:" << std::endl;
   options.printUsage(stream);
 }
@@ -301,7 +301,7 @@ bool isProbeTriggered(ESPProtocol* esp, const Config& C)
   uint8_t port_b_val;
   uint8_t port_c_val;
   esp->getDIOPortState(port_a_val, port_b_val, port_c_val);
-  
+
   if((port_a_val&(0x01<<C.ibit_alive)?true:false)!=C.bit_alive_value)
     {
       std::cerr << "Touch sensor probe not seated or powered off" << std::endl;
@@ -355,46 +355,47 @@ int main(int argc, char** argv)
   Dist                            zzero = 0;
   bool                            zzero_set = 0;
   CircularRegions                 exclusions;
-  std::string                     power_down_axes = "xz";
+  std::string                     power_down_axes = "uvwxz";
 
   options.findWithValue("res",dxdy,"Set the scan grid in mm.");
   options.findWithValue("res_x",dx,"Set the x-axis scan grid in mm. If "
-			"non-zero, this option overrides the value set by "
-			"\"res\".");
+  "non-zero, this option overrides the value set by "
+  "\"res\".");
   options.findWithValue("res_y",dy,"Set the y-axis scan grid in mm. If "
-			"non-zero, this option overrides the value set by "
-			"\"res\".");
+  "non-zero, this option overrides the value set by "
+  "\"res\".");
   options.findWithValue("nsample",nsample,
-			"Set the number of measurement to average over at "
-			"each grid point.");
+  "Set the number of measurement to average over at "
+  "each grid point.");
   options.findWithValue("calib_interval",calib_interval,
-			"Specify the number of scan points to take between "
-			"each calibration measurement. A value of zero "
-			"disables calibration");
+  "Specify the number of scan points to take between "
+  "each calibration measurement. A value of zero "
+  "disables calibration");
   options.findWithValue("calib_xy",calib_xy,
-			"Set the coordinates (X,Y in mm) of the calibration "
-			"points. Enter as a comma separeted list of \"x/y\" "
-			"points, for example \"0/0,580/0,300/380,300/120\".");
+  "Set the coordinates (X,Y in mm) of the calibration "
+  "points. Enter as a comma separeted list of \"x/y\" "
+  "points, for example \"0/0,580/0,300/380,300/120\".");
   if(options.findWithValue("zzero",zzero,
-			   "Set the initial guess at the surface position. If "
-			   "not set, then the current z coordinate is used.")
+     "Set the initial guess at the surface position. If "
+     "not set, then the current z coordinate is used.")
      == VSOptions::FS_FOUND)zzero_set = true;
   options.findWithValue("exclusions",exclusions,
-			"Define a list of circular exclusion regions. Should "
-			"be provided as a comma separated list of triple "
-			"distance values (in mm): x/y/r. For example "
-			"\"10/20/5,40/50/10\".");
+  "Define a list of circular exclusion regions. Should "
+  "be provided as a comma separated list of triple "
+  "distance values (in mm): x/y/r. For example "
+  "\"10/20/5,40/50/10\".");
   options.findWithValue("power_down_axes",power_down_axes,
-			"Set the probe axes for which the stages should be "
-			"powered down when the scan is finished. For example "
-			"\"xz\" powers down the stages for the X and Z axes but"
-			"leaves the Y-axis stage energized.");
+  "Set the probe axes for which the stages should be "
+  "powered down when the scan is finished. For example "
+  "\"xz\" powers down the stages for the X and Z axes but"
+  "leaves the Y-axis stage energized. Additionally, axes on "
+      "the secondary controller can be given as \"uvw\".");
 
   if(!options.assertNoOptions())
     {
       std::cerr << progname << ": unknown options: ";
       for(int i=1;i<argc;i++)
-	if(*(argv[i])=='-') std::cerr << ' ' << argv[i];
+  if(*(argv[i])=='-') std::cerr << ' ' << argv[i];
       std::cerr << std::endl;
       usage(progname, options, std::cerr);
       exit(EXIT_FAILURE);
@@ -418,18 +419,22 @@ int main(int argc, char** argv)
   for(std::string::iterator ichar = power_down_axes.begin();
       ichar != power_down_axes.end(); ichar++)
     {
-      if(*ichar != 'x' && *ichar != 'X' && 
-	 *ichar != 'y' && *ichar != 'Y' &&
-	 *ichar != 'z' && *ichar != 'Z')
-	{
-	  std::cerr << progname
-		    << ": unknown character in power_down_axes option: "
-		    << *ichar << std::endl;
-	  usage(progname, options, std::cerr);
-	  exit(EXIT_FAILURE);
-	}
+      if(*ichar != 'x' && *ichar != 'X' &&
+        *ichar != 'y' && *ichar != 'Y' &&
+        *ichar != 'z' && *ichar != 'Z' &&
+        // 2018-06-21 Borreze France : Add UVW to control power on axes of
+        // secondary controller
+        *ichar != 'u' && *ichar != 'U' &&
+        *ichar != 'v' && *ichar != 'V' &&
+        *ichar != 'w' && *ichar != 'W')
+      {
+        std::cerr << progname
+          << ": unknown character in power_down_axes option: "
+          << *ichar << std::endl;
+        usage(progname, options, std::cerr);
+        exit(EXIT_FAILURE);
+      }
     }
-
 
   Dist x_range = 1.0;
   VSDataConverter::fromString(x_range,*argv);
@@ -448,7 +453,7 @@ int main(int argc, char** argv)
   unsigned ny = lround(std::abs(y_range)/std::abs(dy))+1;
 
   std::cout << x_range << ' ' << dx << ' ' << nx << ' '
-	    << y_range << ' ' << dy << ' ' << ny << '\n';
+      << y_range << ' ' << dy << ' ' << ny << '\n';
 
   DataStream* probe_ds = 0;
   ESPProtocol* probe_esp = 0;
@@ -478,13 +483,13 @@ int main(int argc, char** argv)
       mirror_esp->clearAllErrorCodes();
 
       if(isProbeTriggered(probe_esp,C))
-	{
-	  std::cerr << 
+  {
+    std::cerr <<
 "Probe is triggered at start of data taking which indicates that it is\n"
 "touching mirror or is perhaps disconnected from the ESP-300. Please move\n"
 "probe off of surface and/or check connection to ESP-300. Aborting.\n";
-	  throw Abort();
-	}
+    throw Abort();
+  }
 
       probe_esp->cmdMotorOn(C.ax_probe_x);
       usleep(100000);
@@ -492,12 +497,40 @@ int main(int argc, char** argv)
       usleep(100000);
       probe_esp->cmdMotorOn(C.ax_probe_z);
       usleep(100000);
-      mirror_esp->cmdMotorOn(C.ax_mirror_x);
-      usleep(100000);
-      mirror_esp->cmdMotorOn(C.ax_mirror_z);
-      usleep(100000);
-      mirror_esp->cmdMotorOn(C.ax_mirror_t);
-      usleep(100000);
+
+      for(std::string::iterator ichar = power_down_axes.begin();
+          ichar != power_down_axes.end(); ichar++)
+        {
+          if(*ichar == 'x' || *ichar == 'X')
+        	  continue;
+          else if(*ichar == 'y' || *ichar == 'Y')
+            continue;
+          else if(*ichar == 'z' || *ichar == 'Z')
+            continue;
+          // 2018-06-21 Borreze France : Add UVW to control power on axes of
+          // secondary controller - only energise them if they will be powered
+          // off
+          else if(*ichar == 'u' || *ichar == 'U') {
+            mirror_esp->cmdMotorOn(C.ax_mirror_x);
+            usleep(100000);
+          }
+          else if(*ichar == 'v' || *ichar == 'V') {
+            mirror_esp->cmdMotorOn(C.ax_mirror_z);
+            usleep(100000);
+          }
+          else if(*ichar == 'w' || *ichar == 'W') {
+            mirror_esp->cmdMotorOn(C.ax_mirror_t);
+            usleep(100000);
+          }
+          else
+          	std::cerr
+          	  << progname << ": program logic error!!!" << std::endl
+          	  << progname
+          	  << ": unknown character in power_down_axes option: "
+          	  << *ichar << std::endl
+          	  << progname << ": should have been caught before scanning started."
+          	  << std::endl;
+        }
 
       probe_esp->setEnableDIOToInhibitMotion(C.ax_probe_x, false);
       probe_esp->setEnableDIOToInhibitMotion(C.ax_probe_y, false);
@@ -524,294 +557,294 @@ int main(int argc, char** argv)
       unsigned iscan = 0;
       unsigned ncal = 0;
       bool calibration_last = false;
-      while(loop_iy<ny 
-	    || ((calib_interval>0)&&((calibration_last==false)||(ncal>0))))
-	{
-	  unsigned iix = loop_ix;
-	  if(loop_iy%2==1)iix = nx-loop_ix-1;
+      while(loop_iy<ny
+      || ((calib_interval>0)&&((calibration_last==false)||(ncal>0))))
+  {
+    unsigned iix = loop_ix;
+    if(loop_iy%2==1)iix = nx-loop_ix-1;
 
-	  Dist test_y = y0+loop_iy*dy;
-	  Dist test_x = x0+iix*dx;
+    Dist test_y = y0+loop_iy*dy;
+    Dist test_x = x0+iix*dx;
 
-	  if((calib_interval>0)&&((loop_iy>=ny)||(iscan%calib_interval==0))
-	     &&(calibration_last==false)&&(ncal==0))
-	    ncal = calib_xy.size();
-	    
-	  bool calibration = (calib_interval>0)&&(ncal>0);
+    if((calib_interval>0)&&((loop_iy>=ny)||(iscan%calib_interval==0))
+       &&(calibration_last==false)&&(ncal==0))
+      ncal = calib_xy.size();
 
-	  unsigned ical = calib_xy.size();
-	  if(calibration)
-	    {
-	      ical = calib_xy.size() - ncal;
-	      ncal--;
-	      test_x = calib_xy[ical].first;
-	      test_y = calib_xy[ical].second;
-	    }
-	  else
-	    {
-	      iscan++;
-	    }
+    bool calibration = (calib_interval>0)&&(ncal>0);
 
-	  bool excluded = isInExclusionRegion(test_x,test_y,exclusions);
-	  
-	  Dist z_est  = C.limit_abs_z_bwd;
-	  Dist z_bwd  = C.limit_abs_z_bwd;
-	  Dist z_fwd  = C.limit_abs_z_bwd;
-	  Dist z_slew = C.limit_abs_z_bwd;
+    unsigned ical = calib_xy.size();
+    if(calibration)
+      {
+        ical = calib_xy.size() - ncal;
+        ncal--;
+        test_x = calib_xy[ical].first;
+        test_y = calib_xy[ical].second;
+      }
+    else
+      {
+        iscan++;
+      }
 
-	  if(excluded)
-	    {
-	      z_est  = C.limit_abs_z_bwd;
-	      z_bwd  = C.limit_abs_z_bwd;
-	      z_fwd  = C.limit_abs_z_bwd;
-	      z_slew = C.limit_abs_z_bwd;
-	    }
-	  else 
-	    {
-	      int n_est = 0;
-	      if(calibration)
-		{
-		  if(!calib_z[ical].empty())
-		    {
-		      z_est = median(calib_z[ical]);
-		      n_est = calib_z[ical].size();
-		    }
-		  else 
-		    {
-		      z_est = C.limit_abs_z_fwd;
-		      n_est = -1;
-		    }
-		}
-	      else
-		{
-		  n_est = estimator->guessZ(iix,loop_iy, z_est);
-		  if(n_est<0)assert(0);
-		}
+    bool excluded = isInExclusionRegion(test_x,test_y,exclusions);
 
-	      if((calibration)&&(calib_z[ical].empty()))
-		z_bwd = C.limit_abs_z_bwd;
-	      else
-		z_bwd = 
-		  z_est - C.seek_step_big*(double(C.seek_nstep_big_back)+0.8);
+    Dist z_est  = C.limit_abs_z_bwd;
+    Dist z_bwd  = C.limit_abs_z_bwd;
+    Dist z_fwd  = C.limit_abs_z_bwd;
+    Dist z_slew = C.limit_abs_z_bwd;
 
-	      Dist z_safe = z - C.seek_step_big*double(C.seek_nstep_big_back);
-	      if(z_safe < C.limit_abs_z_bwd)z_safe = C.limit_abs_z_bwd;
+    if(excluded)
+      {
+        z_est  = C.limit_abs_z_bwd;
+        z_bwd  = C.limit_abs_z_bwd;
+        z_fwd  = C.limit_abs_z_bwd;
+        z_slew = C.limit_abs_z_bwd;
+      }
+    else
+      {
+        int n_est = 0;
+        if(calibration)
+  {
+    if(!calib_z[ical].empty())
+      {
+        z_est = median(calib_z[ical]);
+        n_est = calib_z[ical].size();
+      }
+    else
+      {
+        z_est = C.limit_abs_z_fwd;
+        n_est = -1;
+      }
+  }
+        else
+  {
+    n_est = estimator->guessZ(iix,loop_iy, z_est);
+    if(n_est<0)assert(0);
+  }
 
-	      if((calibration)||(calibration_last))z_slew = C.limit_abs_z_bwd;
-	      else if(z_bwd > z_safe)z_slew = z_safe;
-	      else z_slew = z_bwd;
+        if((calibration)&&(calib_z[ical].empty()))
+  z_bwd = C.limit_abs_z_bwd;
+        else
+  z_bwd =
+    z_est - C.seek_step_big*(double(C.seek_nstep_big_back)+0.8);
 
-	      if(n_est > 0)
-		z_fwd = z_est + C.limit_rel_z;
-	      else if(n_est == 0)
-		z_fwd = z_est + C.limit_rel_z*C.limit_rel_z_zero_est_mult;
-	      else
-		z_fwd = C.limit_abs_z_fwd;
-	    }
+        Dist z_safe = z - C.seek_step_big*double(C.seek_nstep_big_back);
+        if(z_safe < C.limit_abs_z_bwd)z_safe = C.limit_abs_z_bwd;
 
-	  calibration_last = calibration;
+        if((calibration)||(calibration_last))z_slew = C.limit_abs_z_bwd;
+        else if(z_bwd > z_safe)z_slew = z_safe;
+        else z_slew = z_bwd;
 
-	  if((y == test_y)&&(x == test_x))goto skip_motion;
+        if(n_est > 0)
+  z_fwd = z_est + C.limit_rel_z;
+        else if(n_est == 0)
+  z_fwd = z_est + C.limit_rel_z*C.limit_rel_z_zero_est_mult;
+        else
+  z_fwd = C.limit_abs_z_fwd;
+      }
 
-	  assert(z_bwd >= z_slew);
-	  assert(z_fwd >= z_bwd);
+    calibration_last = calibration;
 
-	  if(z_slew < C.limit_abs_z_bwd)
-	    {
-	      std::cerr
+    if((y == test_y)&&(x == test_x))goto skip_motion;
+
+    assert(z_bwd >= z_slew);
+    assert(z_fwd >= z_bwd);
+
+    if(z_slew < C.limit_abs_z_bwd)
+      {
+        std::cerr
 << "Z-axis backward limit would be exceeded when retracting probe.. aborting"
 << std::endl;
-	      throw Abort();
-	    }
+        throw Abort();
+      }
 
-	  if(z_fwd > C.limit_abs_z_fwd)
-	    {
-	      if(C.limit_abs_z_fwd > 9998.5)
-		{
-		  // User did not set fwd limit so die here to avoid smashing
-		  // probe
-		  std::cerr
-		    << "Z-axis forward limit would be exceeded when positioning probe.. aborting"
+    if(z_fwd > C.limit_abs_z_fwd)
+      {
+        if(C.limit_abs_z_fwd > 9998.5)
+  {
+    // User did not set fwd limit so die here to avoid smashing
+    // probe
+    std::cerr
+      << "Z-axis forward limit would be exceeded when positioning probe.. aborting"
 << std::endl;
-		  throw Abort();
-		}
-	      else
-		{
-		  // Otherwise trust that they know what they are doing!
-		  z_fwd = C.limit_abs_z_fwd;
-		}
-	    }
+    throw Abort();
+  }
+        else
+  {
+    // Otherwise trust that they know what they are doing!
+    z_fwd = C.limit_abs_z_fwd;
+  }
+      }
 
 #if 0
-	  std::cerr << z_est << ' ' << z_bwd << ' ' << z_fwd << ' ' 
-		    << test_y << ' ' << test_x 
-		    << std::endl;
+    std::cerr << z_est << ' ' << z_bwd << ' ' << z_fwd << ' '
+      << test_y << ' ' << test_x
+      << std::endl;
 #endif
 
-	  z = z_slew;
-	  if(!probe_esp->cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
-	    {
-	      std::cerr
-		<< "Error on Z-axis negative slew.. aborting"
-		<< std::endl;
-	      throw Abort();
-	    }
+    z = z_slew;
+    if(!probe_esp->cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
+      {
+        std::cerr
+  << "Error on Z-axis negative slew.. aborting"
+  << std::endl;
+        throw Abort();
+      }
 
-	  if(y != test_y)
-	    {
-	      y = test_y;
-	      if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_y,
-					  C.ibit_hit, y, C.bit_hit_value))
-		{
-		  std::cerr
-		    << "Y-axis motion interrupted by interlock.. aborting"
-		    << std::endl;
-		  throw Abort();
-		}
-	    }
+    if(y != test_y)
+      {
+        y = test_y;
+        if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_y,
+    C.ibit_hit, y, C.bit_hit_value))
+  {
+    std::cerr
+      << "Y-axis motion interrupted by interlock.. aborting"
+      << std::endl;
+    throw Abort();
+  }
+      }
 
-	  if(x != test_x)
-	    {
-	      x = test_x;
-	      if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_x,
-					  C.ibit_hit, x, C.bit_hit_value))
-		{
-		  std::cerr 
-		    << "X-axis motion interrupted by interlock.. aborting"
-		    << std::endl;
-		  throw Abort();
-		}
-	    }
+    if(x != test_x)
+      {
+        x = test_x;
+        if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_x,
+    C.ibit_hit, x, C.bit_hit_value))
+  {
+    std::cerr
+      << "X-axis motion interrupted by interlock.. aborting"
+      << std::endl;
+    throw Abort();
+  }
+      }
 
-	  if(excluded)
-	    {
-	      if(!calibration)
-		{
-		  loop_ix++;
-		  if(loop_ix == nx)loop_ix=0,loop_iy++;
-		}
-	      continue;
-	    }
+    if(excluded)
+      {
+        if(!calibration)
+  {
+    loop_ix++;
+    if(loop_ix == nx)loop_ix=0,loop_iy++;
+  }
+        continue;
+      }
 
-	  z = z_bwd;
-	  if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_z,
-					  C.ibit_hit, z, C.bit_hit_value))
-	    {
-	      std::cerr
-		<< "Z-axis forward slew interrupted by interlock.. aborting"
-		<< std::endl;
-	      throw Abort();
-	    }
+    z = z_bwd;
+    if(!probe_esp->cmdProtectedMoveToAbsolutePosition(C.ax_probe_z,
+    C.ibit_hit, z, C.bit_hit_value))
+      {
+        std::cerr
+  << "Z-axis forward slew interrupted by interlock.. aborting"
+  << std::endl;
+        throw Abort();
+      }
 
-	skip_motion:
+  skip_motion:
 
-	  while((z < z_fwd)&&(!isProbeTriggered(probe_esp,C)))
-	    {
-	      z += C.seek_step_big;
-	      if(z > z_fwd)z = z_fwd;
+    while((z < z_fwd)&&(!isProbeTriggered(probe_esp,C)))
+      {
+        z += C.seek_step_big;
+        if(z > z_fwd)z = z_fwd;
 
-	      if(!probe_esp->
-		 cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
-		{
-		  std::cerr
-		    << "Error on Z-axis large-step forward motion.. aborting"
-		    << std::endl;
-		  throw Abort();
-		}
-	    }
+        if(!probe_esp->
+   cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
+  {
+    std::cerr
+      << "Error on Z-axis large-step forward motion.. aborting"
+      << std::endl;
+    throw Abort();
+  }
+      }
 
-	  ESPProtocol::Dist z_hit = z;
-	  if(z==z_fwd)
-	    {
-	      if(!calibration)
-		{
-		  loop_ix++;
-		  if(loop_ix == nx)loop_ix=0,loop_iy++;
-		}
-	      continue;
-	    }
+    ESPProtocol::Dist z_hit = z;
+    if(z==z_fwd)
+      {
+        if(!calibration)
+  {
+    loop_ix++;
+    if(loop_ix == nx)loop_ix=0,loop_iy++;
+  }
+        continue;
+      }
 
-	  VSSimpleStat2<Dist> stat;
-	  std::vector<Dist> z_sample; z_sample.reserve(nsample);
-	  
-	  bool retracted = false;
-	  for(unsigned isample=0;isample<nsample;isample++)
-	    {
-	      while((!retracted)||(isProbeTriggered(probe_esp,C)))
-		{
-		  z -= C.seek_step_small*C.seek_nstep_small_back;
-		  if(z < C.limit_abs_z_bwd)
-		    {
-		      std::cerr
+    VSSimpleStat2<Dist> stat;
+    std::vector<Dist> z_sample; z_sample.reserve(nsample);
+
+    bool retracted = false;
+    for(unsigned isample=0;isample<nsample;isample++)
+      {
+        while((!retracted)||(isProbeTriggered(probe_esp,C)))
+  {
+    z -= C.seek_step_small*C.seek_nstep_small_back;
+    if(z < C.limit_abs_z_bwd)
+      {
+        std::cerr
 << "Z-axis backward limit would be exceeded when retracting probe.. aborting"
 << std::endl;
-		      throw Abort();
-		    }
+        throw Abort();
+      }
 
-		  if(!probe_esp->
-		     cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
-		    {
-		      std::cerr
-			<< "Error on Z-axis negtive motion.. aborting"
-			<< std::endl;
-		      throw Abort();
-		    }
+    if(!probe_esp->
+       cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
+      {
+        std::cerr
+  << "Error on Z-axis negtive motion.. aborting"
+  << std::endl;
+        throw Abort();
+      }
 
-		  retracted = true;
-		}
+    retracted = true;
+  }
 
-	      while(!isProbeTriggered(probe_esp,C))
-		{
-		  z += C.seek_step_small;
-		  z = round(z/C.seek_step_small)*C.seek_step_small;
-		  if(z > z_fwd)
-		    {
-		      std::cerr
+        while(!isProbeTriggered(probe_esp,C))
+  {
+    z += C.seek_step_small;
+    z = round(z/C.seek_step_small)*C.seek_step_small;
+    if(z > z_fwd)
+      {
+        std::cerr
 << "Z-axis forward limit would be exceeded when scanning probe.. aborting"
 << std::endl;
-		      throw Abort();
-		    }
+        throw Abort();
+      }
 
-		  if(!probe_esp->
-		     cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
-		    {
-		      std::cerr
-			<< "Error on Z-axis small-step forward motion.. aborting"
-			<< std::endl;
-		      throw Abort();
-		    }
-		}
+    if(!probe_esp->
+       cmdErrorFreeMoveToAbsolutePosition(C.ax_probe_z, z))
+      {
+        std::cerr
+  << "Error on Z-axis small-step forward motion.. aborting"
+  << std::endl;
+        throw Abort();
+      }
+  }
 
-	      retracted = false;
+        retracted = false;
 
-	      stat.accumulate(z);
-	      z_sample.push_back(z);
-	      if(calibration)calib_z[ical].push_back(z);
-	    }
+        stat.accumulate(z);
+        z_sample.push_back(z);
+        if(calibration)calib_z[ical].push_back(z);
+      }
 
-	  time_t tnow = time(0);
-	  std::cerr << tnow << ' ';
+    time_t tnow = time(0);
+    std::cerr << tnow << ' ';
 
-	  if(calibration)
-	    std::cerr << 1 << ' ' << -1 << ' ' << ical << ' ';
-	  else
-	    std::cerr << 0 << ' ' << iix << ' ' << loop_iy << ' ';
+    if(calibration)
+      std::cerr << 1 << ' ' << -1 << ' ' << ical << ' ';
+    else
+      std::cerr << 0 << ' ' << iix << ' ' << loop_iy << ' ';
 
-	  std::cerr << x << ' ' << y << ' '
-		    << stat.mean() << ' ' << stat.dev() << ' '
-		    << median(z_sample) << ' ' << z_est << ' ' << z_hit;
-	  
-	  for(unsigned isample=0;isample<nsample;isample++)
-	    std::cerr << ' ' << z_sample[isample];
-	  std::cerr << '\n';
+    std::cerr << x << ' ' << y << ' '
+      << stat.mean() << ' ' << stat.dev() << ' '
+      << median(z_sample) << ' ' << z_est << ' ' << z_hit;
 
-	  if(!calibration)
-	    {
-	      estimator->addMeasuredZ(iix,loop_iy,stat.mean());
-	      loop_ix++;
-	      if(loop_ix == nx)loop_ix=0,loop_iy++;
-	    }
-	}
+    for(unsigned isample=0;isample<nsample;isample++)
+      std::cerr << ' ' << z_sample[isample];
+    std::cerr << '\n';
+
+    if(!calibration)
+      {
+        estimator->addMeasuredZ(iix,loop_iy,stat.mean());
+        loop_ix++;
+        if(loop_ix == nx)loop_ix=0,loop_iy++;
+      }
+  }
     }
   catch(const CommunicationError& x)
     {
@@ -833,23 +866,28 @@ int main(int argc, char** argv)
       ichar != power_down_axes.end(); ichar++)
     {
       if(*ichar == 'x' || *ichar == 'X')
-	probe_esp->cmdMotorOff(C.ax_probe_x);
+    	  probe_esp->cmdMotorOff(C.ax_probe_x);
       else if(*ichar == 'y' || *ichar == 'Y')
-	probe_esp->cmdMotorOff(C.ax_probe_y);
+    	  probe_esp->cmdMotorOff(C.ax_probe_y);
       else if(*ichar == 'z' || *ichar == 'Z')
-	probe_esp->cmdMotorOff(C.ax_probe_z);
-      else 
-	std::cerr 
-	  << progname << ": program logic error!!!" << std::endl
-	  << progname
-	  << ": unknown character in power_down_axes option: "
-	  << *ichar << std::endl
-	  << progname << ": should have been caught before scanning started." 
-	  << std::endl;
+    	  probe_esp->cmdMotorOff(C.ax_probe_z);
+      // 2018-06-21 Borreze France : Add UVW to control power on axes of
+      // secondary controller
+      else if(*ichar == 'u' || *ichar == 'U')
+        mirror_esp->cmdMotorOff(C.ax_mirror_x);
+      else if(*ichar == 'v' || *ichar == 'V')
+        mirror_esp->cmdMotorOff(C.ax_mirror_z);
+      else if(*ichar == 'w' || *ichar == 'W')
+        mirror_esp->cmdMotorOff(C.ax_mirror_t);
+      else
+      	std::cerr
+      	  << progname << ": program logic error!!!" << std::endl
+      	  << progname
+      	  << ": unknown character in power_down_axes option: "
+      	  << *ichar << std::endl
+      	  << progname << ": should have been caught before scanning started."
+      	  << std::endl;
     }
-  mirror_esp->cmdMotorOff(C.ax_mirror_x);
-  mirror_esp->cmdMotorOff(C.ax_mirror_z);
-  mirror_esp->cmdMotorOff(C.ax_mirror_t);
 
   delete probe_esp;
   delete probe_ds;
