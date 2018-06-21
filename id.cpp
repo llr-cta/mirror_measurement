@@ -12,10 +12,10 @@ using namespace MotionControl;
 
 int main(int argc, char** argv)
 {
-  const char* program = *argv;
+  //const char* program = *argv;
   argv++,argc--;
 
-  const char* port = "/dev/ttyS0";
+  const char* port = "/dev/ttyUSB0";
   if(argc)port=*argv;
   argv++,argc--;
 

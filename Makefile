@@ -12,7 +12,7 @@
 
 include Makefile.common
 
-TARGETS = id dx ip dx_hit scan abs reset
+TARGETS = id dx ip dx_hit scan abs reset calib_point_test
 SUBDIR = MotionControl
 
 CXXFLAGS += -I. $(addprefix -I,$(SUBDIR))

@@ -59,15 +59,15 @@ namespace VERITAS
 
   // Calculator of first two moments: mean, variance
 
-  template<typename T> class VSSimpleStat2
+  template<typename T, typename count_type = unsigned> class VSSimpleStat2
   {
   public:
     VSSimpleStat2(): fCount(0), fSum(0), fSumSq(0) { /* NTSH */ }
     void accumulate(const T& x) { fCount++; fSum+=x; fSumSq+=x*x; }
-    void accumulate(const T& x, unsigned n)
+    void accumulate(const T& x, count_type n) 
     { fCount+=n; const T xn(x*T(n)); fSum+=xn; fSumSq+=x*xn; }
     void clear() { fCount=0; fSum=0; fSumSq=0; }
-    unsigned count() const { return fCount; }
+    count_type count() const { return fCount; }
     T sum() const { return fSum; }
     T sumsq() const { return fSumSq; }
     T mean() const { return fSum/fCount; }
@@ -76,12 +76,13 @@ namespace VERITAS
     T chi2(const T& model) const;
     VSSimpleStat2& operator+= (const VSSimpleStat2& o);
   private:
-    unsigned fCount;
+    count_type fCount;
     T fSum;
     T fSumSq;
   };
 
-  template<typename T> VSSimpleStat2<T>& VERITAS::VSSimpleStat2<T>::
+  template<typename T, typename count_type> 
+  VSSimpleStat2<T,count_type>& VERITAS::VSSimpleStat2<T,count_type>::
   operator +=(const VSSimpleStat2& o)
   {
     fCount += o.fCount;
@@ -90,29 +91,30 @@ namespace VERITAS
     return *this;
   }
 
-  template<typename T> T VERITAS::VSSimpleStat2<T>::
+  template<typename T, typename count_type> 
+  T VERITAS::VSSimpleStat2<T,count_type>::
   chi2(const T& model) const
   {
-    // 1/N sum ( x_i - model )^2
+    // 1/N sum ( x_i - model )^2 
     // = 1/N ( sum x_i^2   -   2*model*sum x_i   +    model^2 )
     // = sumsq/N   -   2*model*mean   +   model^2
 
-    T m = mean();
-    T c = fSumSq/fCount - 2*model*m + model*model;
+    T m = mean(); 
+    T c = fSumSq/fCount - 2*model*m + model*model; 
     return (c<T())?T():c;
   }
 
   // ==========================================================================
   // VSSimpleStat3
   // ==========================================================================
-
+  
   template<typename T> class VSSimpleStat3
   {
   public:
     VSSimpleStat3(): fCount(0), fSum(0), fSumSq(0), fSumCu(0) { /* NTSH */ }
-    void accumulate(const T& x)
+    void accumulate(const T& x) 
     { fCount++; fSum+=x; const T x2=x*x; fSumSq+=x2; fSumCu+=x2*x; }
-    void accumulate(const T& x, unsigned n)
+    void accumulate(const T& x, unsigned n) 
     { fCount+=n; const T xn(x*T(n)); fSum+=xn; const T xxn(x*xn);
       fSumSq+=xxn; fSumCu+=x*xxn; }
     void clear() { fCount=0; fSum=0; fSumSq=0; fSumCu=0; }
@@ -121,7 +123,7 @@ namespace VERITAS
     T sumsq() const { return fSumSq; }
     T mean() const { return fSum/fCount; }
     T var() const { T m=mean(); T v=fSumSq/fCount-m*m; return (v<T())?T():v; }
-    T mom3() const
+    T mom3() const 
     { T m=mean(); return (fSumCu-T(3)*m*fSumSq)/fCount+T(2)*m*m*m; }
     T dev() const { return sqrt(var()); }
     T chi2(const T& model) const;
@@ -146,12 +148,12 @@ namespace VERITAS
   template<typename T> T VERITAS::VSSimpleStat3<T>::
   chi2(const T& model) const
   {
-    // 1/N sum ( x_i - model )^2
+    // 1/N sum ( x_i - model )^2 
     // = 1/N ( sum x_i^2   -   2*model*sum x_i   +    model^2 )
     // = sumsq/N   -   2*model*mean   +   model^2
 
-    T m = mean();
-    T c = fSumSq/fCount - 2*model*m + model*model;
+    T m = mean(); 
+    T c = fSumSq/fCount - 2*model*m + model*model; 
     return (c<T())?T():c;
   }
 
@@ -182,23 +184,23 @@ namespace VERITAS
     unsigned fCount;
     T*       fRawMoments;
   };
-
+  
   template<typename T> inline VERITAS::VSSimpleStatN<T>::
-  VSSimpleStatN(unsigned num_moments):
+  VSSimpleStatN(unsigned num_moments): 
     fNumMoments(num_moments), fCount(0), fRawMoments(new T[num_moments])
   {
     for(unsigned i=0; i<fNumMoments; i++)fRawMoments[i]=T();
   }
-
+  
   template<typename T> inline VERITAS::VSSimpleStatN<T>::
   VSSimpleStatN(const VSSimpleStatN& o):
-    fNumMoments(o.fNumMoments), fCount(o.fCount),
+    fNumMoments(o.fNumMoments), fCount(o.fCount), 
     fRawMoments(new T[o.fNumMoments])
   {
     for(unsigned i=0; i<fNumMoments; i++)fRawMoments[i]=o.fRawMoments[i];
   }
-
-  template<typename T> inline VERITAS::VSSimpleStatN<T>&
+  
+  template<typename T> inline VERITAS::VSSimpleStatN<T>& 
   VERITAS::VSSimpleStatN<T>::operator= (const VSSimpleStatN& o)
   {
     if(fNumMoments!=o.fNumMoments)
@@ -211,32 +213,32 @@ namespace VERITAS
     for(unsigned i=0; i<fNumMoments; i++)fRawMoments[i]=o.fRawMoments[i];
     return *this;
   }
-
+  
   template<typename T> inline void VERITAS::VSSimpleStatN<T>::
   accumulate(const T& x)
-  {
+  { 
     T y(x);
-    fCount++;
+    fCount++; 
     for(unsigned i=0; i<fNumMoments; i++)
-      {
-	if(i>0)y*=x;
+      { 
+	if(i>0)y*=x; 
 	fRawMoments[i]+=y;
       }
   }
 
   template<typename T> inline void VERITAS::VSSimpleStatN<T>::
   accumulate(const T& x, unsigned n)
-  {
+  { 
     T y(x);
     y*=T(n);
-    fCount+=n;
+    fCount+=n; 
     for(unsigned i=0; i<fNumMoments; i++)
-      {
-	if(i>0)y*=x;
+      { 
+	if(i>0)y*=x; 
 	fRawMoments[i]+=y;
       }
   }
-
+  
   template<typename T> inline T VERITAS::VSSimpleStatN<T>::
   moment(unsigned m) const
   {
@@ -252,9 +254,9 @@ namespace VERITAS
     else
       {
 	T sum = T();
-
+	
 	sum += fRawMoments[m];
-
+	
 	T m1n(fRawMoments[0]);
 	for(unsigned i=1; i<m; i++)
 	  {
@@ -266,7 +268,7 @@ namespace VERITAS
 	    m1n*=fRawMoments[0];
 	  }
 	m1n*=fRawMoments[0];
-
+	
 	if(m%2==0)sum += double(m)*m1n;
 	else sum -= double(m)*m1n;
 
@@ -291,7 +293,7 @@ namespace VERITAS
   {
     std::vector<T> good_data;
     good_data.reserve(data.size());
-    for(typename std::vector<std::pair<bool, T> >::const_iterator
+    for(typename std::vector<std::pair<bool, T> >::const_iterator 
 	  idatum = data.begin(); idatum != data.end(); idatum++)
       if(idatum->first)good_data.push_back(idatum->second);
     unsigned ngood_data = good_data.size();
@@ -323,7 +325,7 @@ namespace VERITAS
   {
     std::vector<T> good_data;
     good_data.reserve(data.size());
-    for(typename std::vector<std::pair<bool, T> >::const_iterator
+    for(typename std::vector<std::pair<bool, T> >::const_iterator 
 	  idatum = data.begin(); idatum != data.end(); idatum++)
       if(idatum->first)good_data.push_back(idatum->second);
     unsigned ngood_data = good_data.size();
@@ -343,6 +345,70 @@ namespace VERITAS
     unsigned ilo = unsigned(round(double(ngood_data-1)*(1-fraction)/2.0));
     hi = med + (good_data[ihi] - med)*scale;
     lo = med + (good_data[ilo] - med)*scale;
+    return true;
+  }
+  
+  template<typename T> static
+  inline bool containmentIntervalLower(const std::vector<T>& data,
+				       double fraction, T& lo, T& lo_err)
+  {
+    std::vector< double > d = data;
+
+    const unsigned ndata = d.size();
+    if(ndata == 0) 
+      {
+	lo = T();
+	lo_err = T();
+	return false;
+      }
+
+    std::sort(d.begin(), d.end());
+    unsigned ilo;
+
+    if(fraction<=0.0) ilo = ndata-1;
+    else if(fraction>=1.0) ilo = 0;
+    else ilo = unsigned(floor(ndata*(1-fraction)));
+      
+    unsigned err = (unsigned)sqrt(ndata*fraction*(1-fraction));
+    
+    unsigned ilo_err1 = std::max((int)0,(int)(ilo-err));
+    unsigned ilo_err2 = std::min((int)(ndata-1),(int)(ilo+err));
+
+    lo = d[ilo];
+    lo_err = (d[ilo_err2] - d[ilo_err1])/2.;
+
+    return true;
+  }
+
+  template<typename T> static
+  inline bool containmentIntervalUpper(const std::vector<T>& data,
+				       double fraction, T& hi, T& hi_err)
+  {
+    std::vector< double > d = data;
+
+    const unsigned ndata = d.size();
+    if(ndata == 0) 
+      {
+	hi = T();
+	hi_err = T();
+	return false;
+      }
+
+    std::sort(d.begin(), d.end());
+    unsigned ihi;
+
+    if(fraction<=0.0) ihi = 0;
+    else if(fraction>=1.0) ihi = ndata-1;
+    else ihi = unsigned(floor(ndata*fraction));
+
+    unsigned err = (unsigned)sqrt(ndata*fraction*(1-fraction));
+    
+    unsigned ihi_err1 = std::max((int)0,(int)(ihi-err));
+    unsigned ihi_err2 = std::min((int)(ndata-1),(int)(ihi+err));
+
+    hi = d[ihi];  
+    hi_err = (d[ihi_err2] - d[ihi_err1])/2.;
+
     return true;
   }
 

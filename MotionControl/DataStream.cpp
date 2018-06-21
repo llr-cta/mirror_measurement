@@ -23,6 +23,7 @@
 #include<sstream>
 #include<memory>
 #include<cstdlib>
+#include<cstring>
 #include<unistd.h>
 #include<fcntl.h>
 #include<termios.h>
@@ -45,14 +46,14 @@
 #include"Debug.hpp"
 #include"DataStream.hpp"
 
+#if defined(__APPLE__) || defined(__MACH__)
+# ifndef MSG_NOSIGNAL
+#   define MSG_NOSIGNAL SO_NOSIGPIPE
+# endif
+#endif
+
 using namespace VMessaging;
 using namespace VTracking;
-
-#ifdef __APPLE__
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-#endif
 
 // ----------------------------------------------------------------------------
 // Various Communications Related Exceptions
@@ -68,7 +69,7 @@ CommunicationError::~CommunicationError() throw()
   // nothing to see here
 }
 
-EOFException::~EOFException() throw()
+EOFException::~EOFException() throw() 
 {
   // nothing to see here
 }
@@ -79,10 +80,10 @@ EOFException::~EOFException() throw()
 
 DataStream::~DataStream()
 {
-  // nothing to see here
+  // nothing to see here  
 }
 
-datastring
+datastring 
 DataStream::recvToEOM(const datastring& eom, long to_sec, long to_usec)
 {
   const std::string::size_type neom = eom.size();
@@ -114,14 +115,14 @@ void DataStream::printAsHexOctets(std::ostream& stream, const datastring& data)
   for(datastring::const_iterator i=data.begin(); i!=data.end(); i++)
     {
       if(print_space)s << ' ';
-      s << std::hex << std::uppercase
+      s << std::hex << std::uppercase 
 	<< std::setw(2) << std::setfill('0') << int(*i);
       print_space=true;
     }
   stream << s.str();
 }
 
-bool DataStream::printAsAscii(std::ostream& stream, const datastring& data,
+bool DataStream::printAsAscii(std::ostream& stream, const datastring& data, 
 			      bool print_space, bool last_hex)
 {
   std::ostringstream s;
@@ -133,11 +134,11 @@ bool DataStream::printAsAscii(std::ostream& stream, const datastring& data,
 	  s << std::dec << std::setw(1) << char(*i);
 	  last_hex=false;
 	}
-      else
+      else 
 	{
 	  if(print_space)s << ' ';
-	  s << "0x" << std::hex << std::uppercase
-	    << std::setw(2) << std::setfill('0')
+	  s << "0x" << std::hex << std::uppercase 
+	    << std::setw(2) << std::setfill('0') 
 	    << int(*i);
 	  last_hex=true;
 	}
@@ -170,10 +171,10 @@ makeDataStream(const std::string& udsl, int loud, OpenMode mode,
   else if(scheme == "udp")
     {
       if(name.size()==0)
-      {
-        if(mode==OM_CLIENT)name="192.168.1.50/5000";
-	      else name="0.0.0.0/5000";
-      }
+	{
+	  if(mode==OM_CLIENT)name="192.168.1.50/5000";
+	  else name="0.0.0.0/5000";
+	}
       return new UDPDataStream(name,mode,loud,to_sec,to_usec);
     }
   else if(scheme == "unix")
@@ -184,8 +185,8 @@ makeDataStream(const std::string& udsl, int loud, OpenMode mode,
   else
     {
       Exception error("Unknown DataStream scheme");
-      error.messageStream()
-	<< "Unknown uniform datastream locator scheme \""
+      error.messageStream() 
+	<< "Unknown uniform datastream locator scheme \"" 
 	<< scheme << '"' << std::endl <<  "UDSL=" << udsl;
       throw error;
     }
@@ -262,7 +263,7 @@ sendData(const datastring& out, long to_sec, long to_usec)
   unsigned i=0;
   if(loud()>=2)
     Debug::stream()
-      << "SEND(" << std::dec << out.size() << ','
+      << "SEND(" << std::dec << out.size() << ',' 
       << to_sec << ',' << to_usec << "):";
   while(i<out.size())
     {
@@ -289,9 +290,9 @@ sendData(const datastring& out, long to_sec, long to_usec)
 
       if(loud()>=2)
 	{
-	  std::ostringstream s;
-	  s << ' ' << std::setw(2) << std::setprecision(2)
-	    << std::setfill('0') << std::hex << std::uppercase
+	  std::ostringstream s; 
+	  s << ' ' << std::setw(2) << std::setprecision(2) 
+	    << std::setfill('0') << std::hex << std::uppercase 
 	    << (int(*(out.c_str()+i))&0xff);
 	  Debug::stream() << s.str();
 	}
@@ -306,7 +307,7 @@ recvData(size_t req_count, long to_sec, long to_usec)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
 
   if(loud()>=2)
-    Debug::stream() << "RECV(" << std::dec << req_count << ','
+    Debug::stream() << "RECV(" << std::dec << req_count << ',' 
 		    << to_sec << ',' << to_usec << "):";
   datastring data;
   for(unsigned i=0; i<req_count; i++)
@@ -332,12 +333,12 @@ recvData(size_t req_count, long to_sec, long to_usec)
       if(n==0)throw EOFException();
       else if((n<0)&&(errno==ECONNRESET))throw EOFException();
       else if(n<0)throw CommunicationError("Read returned error");
-
+      
       if(loud()>=2)
 	{
 	  std::ostringstream s;
-	  s << ' ' << std::setw(2) << std::setprecision(2)
-	    << std::setfill('0') << std::hex << std::uppercase
+	  s << ' ' << std::setw(2) << std::setprecision(2) 
+	    << std::setfill('0') << std::hex << std::uppercase 
 	    << (int(c)&0xff);
 	  Debug::stream() << s.str();
 	}
@@ -364,7 +365,7 @@ SerialPortDataStream(const std::string& filename,
   : GenericFDDataStream(loud,to_sec,to_usec), m_filename(filename)
 {
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
-
+  
   m_fd=open(filename.c_str(),O_RDWR | O_NOCTTY);
   if(m_fd==-1)
     throw CommunicationError(std::string("Could not open ")+filename);
@@ -375,7 +376,7 @@ SerialPortDataStream(const std::string& filename,
   // port.c_oflag = 0;
   port.c_cflag = B19200 | CS8 | CLOCAL | CREAD | !CRTSCTS;
   port.c_lflag = NOFLSH | !ISIG;
-
+  
   if(port_p==0)port_p=&port;
 
   if(tcsetattr(m_fd, TCSANOW, port_p) < 0)
@@ -427,8 +428,8 @@ StreamSocketDataStream::recvData(size_t req_count, long to_sec, long to_usec)
       if((m_fd==-1)&&(m_sockfd!=-1))
 	{
 	  if(loud()>=2)
-	    Debug::stream() << "RECV(" << std::dec << req_count << ','
-			    << to_sec << ',' << to_usec
+	    Debug::stream() << "RECV(" << std::dec << req_count << ',' 
+			    << to_sec << ',' << to_usec 
 			    << "): Accepting Connections" << std::endl;
 	  fd_set ifds;
 	  FD_ZERO(&ifds);
@@ -442,12 +443,12 @@ StreamSocketDataStream::recvData(size_t req_count, long to_sec, long to_usec)
 	  if(n<0)
 	    throw CommunicationError("Select on socket returned error");
 	  else if(n==0)throw Timeout();
-
+	  
 	  m_fd=accept(m_sockfd,0,0);
 	  if(m_fd==-1)
 	    throw CommunicationError("Could not listen to socket");
 	}
-
+      
       try
 	{
 	  return GenericFDDataStream::recvData(req_count,to_sec,to_usec);
@@ -465,8 +466,8 @@ StreamSocketDataStream::recvData(size_t req_count, long to_sec, long to_usec)
 // Unix Domain Data Stream
 // ----------------------------------------------------------------------------
 
-UNIXDomainDataStream::UNIXDomainDataStream(const std::string& filename,
-					   OpenMode mode,
+UNIXDomainDataStream::UNIXDomainDataStream(const std::string& filename, 
+					   OpenMode mode, 
 					   int loud, long to_sec, long to_usec)
   : StreamSocketDataStream(loud,to_sec,to_usec), m_filename(filename)
 {
@@ -522,8 +523,8 @@ std::string UNIXDomainDataStream::udsl() const
 // ----------------------------------------------------------------------------
 // UDP Data Stream -- Each messsage in a different packet
 // ----------------------------------------------------------------------------
-
-static bool
+  
+static bool 
 decodeIPAddressAndPort(const std::string& address, struct sockaddr_in& sa)
 {
   std::string::size_type index = address.find('/');
@@ -546,8 +547,8 @@ decodeIPAddressAndPort(const std::string& address, struct sockaddr_in& sa)
   return true;
 }
 
-UDPDataStream::UDPDataStream(const std::string& address, OpenMode mode,
-			     int loud, long to_sec, long to_usec):
+UDPDataStream::UDPDataStream(const std::string& address, OpenMode mode, 
+			     int loud, long to_sec, long to_usec): 
   DualModeDataStream(loud,to_sec,to_usec), m_mode(mode), m_remote_addr(),
   m_address(address)
 {
@@ -576,7 +577,7 @@ UDPDataStream::UDPDataStream(const std::string& address, OpenMode mode,
 
 	  if(!decodeIPAddressAndPort(address, sa))
 	    throw Exception("Resolve failed",std::string("Could not decode or resolve address: ")+address);
-
+	  
 	  if(bind(m_fd,reinterpret_cast<sockaddr*>(&sa),sizeof(sa))<0)
 	    throw CommunicationError(std::string("Could not bind to: ")+address);
 	}
@@ -594,7 +595,7 @@ void UDPDataStream::sendData(const datastring& out, long to_sec, long to_usec)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
 
   if(loud()>=2)
-    Debug::stream() << "SEND(" << std::dec << out.size() << ','
+    Debug::stream() << "SEND(" << std::dec << out.size() << ',' 
 		    << to_sec << ',' << to_usec << "): ";
 
   fd_set ofds;
@@ -605,7 +606,7 @@ void UDPDataStream::sendData(const datastring& out, long to_sec, long to_usec)
   tv.tv_usec=to_usec;
   timeval* tvp=&tv;
   if((to_sec==0)&&(to_usec==0))tvp=0;
-
+  
   int n=select(m_fd+1,0,&ofds,0,tvp);
   if(n==0)
     {
@@ -617,17 +618,17 @@ void UDPDataStream::sendData(const datastring& out, long to_sec, long to_usec)
 
   n=sendto(m_fd,out.c_str(),out.size(),MSG_DONTWAIT|MSG_NOSIGNAL,
 	   reinterpret_cast<sockaddr*>(&m_remote_addr),sizeof(m_remote_addr));
-
+  
   if((n<0)&&(errno==EAGAIN))throw Timeout();
   else if((n>=0)&&(n<int(out.size())))
     {
       std::ostringstream msg;
-      msg << "Request to send " << out.size()
+      msg << "Request to send " << out.size() 
 	  << " characters by UDP could not be fulfilled";
       throw Exception("UDP send failed",msg.str());
     }
   else if(n<0)throw CommunicationError("sendto() returned error");
-
+  
   if(loud()>=2)
     {
       printAsAscii(Debug::stream(), out);
@@ -640,7 +641,7 @@ datastring UDPDataStream::recvData(size_t req_count, long to_sec, long to_usec)
   RegisterThisFunction fnguard(__PRETTY_FUNCTION__);
 
   if(loud()>=2)
-    Debug::stream() << "RECV(" << std::dec << req_count << ','
+    Debug::stream() << "RECV(" << std::dec << req_count << ',' 
 		    << to_sec << ',' << to_usec << "): ";
 
   fd_set ifds;
@@ -664,12 +665,12 @@ datastring UDPDataStream::recvData(size_t req_count, long to_sec, long to_usec)
   GuardedBuffer buffer(sc_maxMsgLen);
   struct sockaddr_in sa;
   socklen_t sa_len = sizeof(sa);
-  n = recvfrom(m_fd, buffer.get(), sc_maxMsgLen, MSG_NOSIGNAL,
+  n = recvfrom(m_fd, buffer.get(), sc_maxMsgLen, MSG_NOSIGNAL, 
 	       reinterpret_cast<sockaddr*>(&sa), &sa_len);
 
   if((n<0)&&(errno==EAGAIN))throw Timeout();
   else if(n<0)throw CommunicationError("recvfrom() returned error");
-
+  
   if(m_mode==OM_SERVER)m_remote_addr = sa;
 
   datastring data(buffer.get(),n);
@@ -702,7 +703,7 @@ void UDPDataStream::resetDataStream()
       //  tv.tv_usec=to_usec;
       tv.tv_sec=0;
       tv.tv_usec=0;
-
+      
       n=select(m_fd+1,&ifds,0,0,&tv);
 
       if(n==-1)
@@ -712,9 +713,9 @@ void UDPDataStream::resetDataStream()
 	{
 	  struct sockaddr_in sa;
 	  socklen_t sa_len = sizeof(sa);
-	  int nn = recvfrom(m_fd, buffer.get(), sc_maxMsgLen, MSG_NOSIGNAL,
+	  int nn = recvfrom(m_fd, buffer.get(), sc_maxMsgLen, MSG_NOSIGNAL, 
 			    reinterpret_cast<sockaddr*>(&sa), &sa_len);
-
+	  
 	  if((nn<0)&&(errno!=EAGAIN))
 	    throw CommunicationError("recvfrom() returned error");
 
@@ -744,7 +745,8 @@ TestDataStream::~TestDataStream()
 
 void TestDataStream::sendData(const datastring& out, long to_sec, long to_usec)
 {
-  write(1,out.c_str(),out.length());
+  ssize_t nwritten = write(1,out.c_str(),out.length());
+  (void)(nwritten);
 }
 
 datastring TestDataStream::recvData(size_t req_count, long to_sec, long to_usec)
@@ -753,7 +755,8 @@ datastring TestDataStream::recvData(size_t req_count, long to_sec, long to_usec)
   datastring str;
   for(unsigned i=0;i<req_count;i++)
     {
-      read(0,&c,1);
+      if(read(0,&c,1) != 1)
+	break;
       str += c;
     }
   return str;
@@ -763,7 +766,7 @@ void TestDataStream::resetDataStream()
 {
   // nothing to see here
 }
-
+ 
 #ifdef TESTMAIN
 
 int main(int argc, char** argv)
@@ -774,12 +777,12 @@ int main(int argc, char** argv)
       struct sockaddr_in addr;
       bool good = decodeIPAddressAndPort(*argv, addr);
       if(good)
-	Debug::stream()
-	  << std::setw(30) << std::left << *argv << " = "
+	Debug::stream() 
+	  << std::setw(30) << std::left << *argv << " = " 
 	  << std::setw(15) << std::left << inet_ntoa(addr.sin_addr) << ' '
-	  << std::setw(5) << ntohs(addr.sin_port) << ' '
+	  << std::setw(5) << ntohs(addr.sin_port) << ' ' 
 	  << addr.sin_family << std::endl;
-      else
+      else 
 	Debug::stream() << *argv << ": Could not resolve IP addr and port"
 			<< std::endl;
       argc--,argv++;

@@ -1,6 +1,7 @@
+#include<unistd.h>
+
 #include<DataStream.hpp>
 #include<VSDataConverter.hpp>
-#include<unistd.h>
 
 #include"ESPProtocol.hpp"
 
@@ -20,7 +21,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  const char* port = *argv;
+  const char* port = *argv; 
   argv++,argc--;
 
   DataStream* ds = 0;
@@ -30,7 +31,7 @@ int main(int argc, char** argv)
       ds = ESPProtocol::makeSerialDataStream(port);
       ESPProtocol esp(ds);
       esp.clearAllErrorCodes();
-
+      
       while(1)
 	{
 	  uint8_t port_a_val;
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 	  for(unsigned ibit=0;ibit<8;ibit++)
 	    std::cout << (((port_b_val>>(7-ibit))&0x01)?1:0);
 	  std::cout << ' ';
-
+	  
 	  for(unsigned ibit=0;ibit<8;ibit++)
 	    std::cout << (((port_c_val>>(7-ibit))&0x01)?1:0);
 	  std::cout << '\n';

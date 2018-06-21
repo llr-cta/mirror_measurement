@@ -4,6 +4,7 @@
 #include<map>
 
 #include<time.h>
+#include<unistd.h>
 
 #include<DataStream.hpp>
 #include<VSOptions.hpp>
@@ -30,9 +31,9 @@ struct Config
   typedef ESPProtocol::Dist Dist;
 
   Config(): 
-    dev_probe("/dev/ttyS0"), ax_probe_x(0), ax_probe_y(1), ax_probe_z(2),
+    dev_probe("/dev/ttyUSBS0"), ax_probe_x(0), ax_probe_y(1), ax_probe_z(2),
     ibit_hit(0), ibit_alive(1), bit_hit_value(true), bit_alive_value(true),
-    dev_mirror("/dev/ttyS1"), ax_mirror_x(0), ax_mirror_z(1), ax_mirror_t(2),
+    dev_mirror("/dev/ttyUSBS1"), ax_mirror_x(0), ax_mirror_z(1), ax_mirror_t(2),
     limit_abs_z_bwd(0.0), limit_abs_z_fwd(9999.0), 
     limit_rel_z(0.25), limit_rel_z_zero_est_mult(4),
     seek_step_big(0.1), seek_nstep_big_back(10),
@@ -168,6 +169,7 @@ int main(int argc, char** argv)
 
   unsigned                        nsample = 1;
   unsigned                        sleepsec = 600;
+  std::string                     power_down_axes = "xz";
 
   options.findWithValue("nsample",nsample,
 			"Set the number of measurement to average over at "
@@ -175,6 +177,11 @@ int main(int argc, char** argv)
   options.findWithValue("sleep",sleepsec,
 			"Specify the number of seconds to sleep between "
 			"measurement sets.");
+  options.findWithValue("power_down_axes",power_down_axes,
+			"Set the probe axes for which the stages should be "
+			"powered down when the scan is finished. For example "
+			"\"xz\" powers down the stages for the X and Z axes but"
+			"leaves the Y-axis stage energized.");
 
   if(!options.assertNoOptions())
     {
@@ -198,6 +205,22 @@ int main(int argc, char** argv)
     {
       usage(progname, options, std::cout);
       exit(EXIT_FAILURE);
+    }
+
+  // Parse the "power_down_axes" option now for safety
+  for(std::string::iterator ichar = power_down_axes.begin();
+      ichar != power_down_axes.end(); ichar++)
+    {
+      if(*ichar != 'x' && *ichar != 'X' && 
+	 *ichar != 'y' && *ichar != 'Y' &&
+	 *ichar != 'z' && *ichar != 'Z')
+	{
+	  std::cerr << progname
+		    << ": unknown character in power_down_axes option: "
+		    << *ichar << std::endl;
+	  usage(progname, options, std::cerr);
+	  exit(EXIT_FAILURE);
+	}
     }
 
   std::vector<Coord> xy;
@@ -480,9 +503,30 @@ int main(int argc, char** argv)
 
     }
 
-  probe_esp->cmdMotorOff(C.ax_probe_x);
-  probe_esp->cmdMotorOff(C.ax_probe_y);
-  probe_esp->cmdMotorOff(C.ax_probe_z);
+  // retract probe back to z=0 when finished (added 10/01/2014)
+  probe_esp->cmdMoveToAbsolutePosition(C.ax_probe_z,0);
+  probe_esp->pollForMotionDone(C.ax_probe_z);
+
+  // Allow user to choose which axes to switch off to protect in case
+  // of high gravity load (added 10/01/2014 and modified 10/11/2014)
+  for(std::string::iterator ichar = power_down_axes.begin();
+      ichar != power_down_axes.end(); ichar++)
+    {
+      if(*ichar == 'x' || *ichar == 'X')
+	probe_esp->cmdMotorOff(C.ax_probe_x);
+      else if(*ichar == 'y' || *ichar == 'Y')
+	probe_esp->cmdMotorOff(C.ax_probe_y);
+      else if(*ichar == 'z' || *ichar == 'Z')
+	probe_esp->cmdMotorOff(C.ax_probe_z);
+      else 
+	std::cerr 
+	  << progname << ": program logic error!!!" << std::endl
+	  << progname
+	  << ": unknown character in power_down_axes option: "
+	  << *ichar << std::endl
+	  << progname << ": should have been caught before scanning started." 
+	  << std::endl;
+    }
   mirror_esp->cmdMotorOff(C.ax_mirror_x);
   mirror_esp->cmdMotorOff(C.ax_mirror_z);
   mirror_esp->cmdMotorOff(C.ax_mirror_t);

@@ -67,6 +67,14 @@ VSOptions::VSOptions(int& argc, char**argv, bool print_default):
       if((arg.length()==1)||((arg.length()==2)&&(arg[1]=='-')))
 	{
 	  fArgs[iarg] = 0;
+	  iarg++;
+	  while(iarg < fArgs.size())
+	    {
+	      *(fArgV+iarg-1) = fArgs[iarg];
+	      iarg++;
+	    }
+	  fArgC--;
+	  fArgV[fArgC] = 0;
 	  break;
 	}
       std::string::size_type i_key_start = arg[1]=='-' ? 2 : 1;

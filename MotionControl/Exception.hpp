@@ -25,7 +25,7 @@
 #include<vector>
 #include<string>
 #include<sstream>
-
+#include<cstdlib>
 #include<errno.h>
 #include<signal.h>
 

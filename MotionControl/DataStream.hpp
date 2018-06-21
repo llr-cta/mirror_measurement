@@ -27,6 +27,7 @@
 
 #include<termios.h>
 #include<netinet/in.h>
+#include<cstdlib>
 
 #include<Exception.hpp>
 

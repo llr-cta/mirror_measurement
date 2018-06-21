@@ -21,7 +21,7 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     }
 
-  const char* port = "/dev/ttyS0";
+  const char* port = "/dev/ttyUSB0";
   ESPProtocol::IAxis iaxis = 2;
 
   ESPProtocol::Dist z = 0;
