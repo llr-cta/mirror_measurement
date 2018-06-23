@@ -452,8 +452,10 @@ int main(int argc, char** argv)
   unsigned nx = lround(std::abs(x_range)/std::abs(dx))+1;
   unsigned ny = lround(std::abs(y_range)/std::abs(dy))+1;
 
+#if 0
   std::cout << x_range << ' ' << dx << ' ' << nx << ' '
       << y_range << ' ' << dy << ' ' << ny << '\n';
+#endif
 
   DataStream* probe_ds = 0;
   ESPProtocol* probe_esp = 0;
