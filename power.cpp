@@ -53,12 +53,18 @@ int main(int argc, char** argv)
     ds = ESPProtocol::makeSerialDataStream(port);
     ESPProtocol esp(ds);
     esp.clearAllErrorCodes();
-    for(unsigned ichar=0; axes[ichar]; ichar++)
+    for(ESPProtocol::IAxis iaxis = 0; iaxis<3; iaxis++)
     {
-      ESPProtocol::IAxis iaxis = axes[ichar] - '0';
-      if(on)esp.cmdMotorOn(iaxis);
-      else esp.cmdMotorOff(iaxis);
-      usleep(100000);
+      for(unsigned ichar=0; axes[ichar]; ichar++)
+      {
+        if(axes[ichar] == '0'+iaxis)
+        {
+          if(on)esp.cmdMotorOn(iaxis);
+          else esp.cmdMotorOff(iaxis);
+          usleep(100000);
+          break;
+        }
+      }
     }
   }
   catch(const VMessaging::Exception& x)
