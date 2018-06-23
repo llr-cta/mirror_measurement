@@ -19,12 +19,12 @@ int main(int argc, char** argv)
   argv++,argc--;
 
   if(argc!=3)
-    {
-      std::cerr << "Usage: " << program << " port axes [on/off]" << '\n';
-      exit(EXIT_FAILURE);
-    }
+  {
+    std::cerr << "Usage: " << program << " port axes [on/off]" << '\n';
+    exit(EXIT_FAILURE);
+  }
 
-  const char* port = *argv; 
+  const char* port = *argv;
   argv++,argc--;
 
   const char* axes = *argv;
@@ -35,7 +35,7 @@ int main(int argc, char** argv)
       std::cerr << "Unrecognised axis: " << axes[ichar] << " ; axes must be combination of 0, 1, and 2." << '\n';
       exit(EXIT_FAILURE);
     }
-    
+
   const char* onoff = *argv;
   argv++,argc--;
   bool on = true;
@@ -45,27 +45,31 @@ int main(int argc, char** argv)
     std::cerr << "Final argument must be on or off." << '\n';
     exit(EXIT_FAILURE);
   }
- 
+
   DataStream* ds = 0;
 
   try
+  {
+    ds = ESPProtocol::makeSerialDataStream(port);
+    ESPProtocol esp(ds);
+    esp.clearAllErrorCodes();
+    for(unsigned ichar=0; axes[ichar]; ichar++)
     {
-      ds = ESPProtocol::makeSerialDataStream(port);
-      ESPProtocol esp(ds);
-      esp.clearAllErrorCodes();
-      for(unsigned ichar=0; axes[ichar]; ichar++)
-      {
-        ESPProtocol::IAxis iaxis = axes[ichar] - '0';
-        if(on)esp.cmdMotorOn(iaxis);
-        else esp.cmdMotorOff(iaxis);
-        usleep(100000);
-      }
+      ESPProtocol::IAxis iaxis = axes[ichar] - '0';
+      if(on)esp.cmdMotorOn(iaxis);
+      else esp.cmdMotorOff(iaxis);
+      usleep(100000);
     }
+  }
+  catch(const VMessaging::Exception& x)
+  {
+    x.print(std::cerr);
+  }
   catch(const CommunicationError& x)
-    {
-      x.print(std::cerr);
-      std::cerr << strerror(x.errorNum()) << '\n';
-    }
+  {
+    x.print(std::cerr);
+    std::cerr << strerror(x.errorNum()) << '\n';
+  }
 
   delete ds;
 }
