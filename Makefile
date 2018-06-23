@@ -12,7 +12,7 @@
 
 include Makefile.common
 
-TARGETS = id dx ip dx_hit scan abs reset calib_point_test
+TARGETS = id dx ip dx_hit scan abs reset calib_point_test power
 SUBDIR = MotionControl
 
 CXXFLAGS += -I. $(addprefix -I,$(SUBDIR))
@@ -60,6 +60,9 @@ scan: scan.o
 	$(CXX) $(LDFLAGS) -o $@ $< $(LIBS)
 
 reset: reset.o
+	$(CXX) $(LDFLAGS) -o $@ $< $(LIBS)
+
+power: power.o
 	$(CXX) $(LDFLAGS) -o $@ $< $(LIBS)
 
 clean: $(addsuffix -clean,$(SUBDIR))
