@@ -1,5 +1,8 @@
 //-*-mode:c++; mode:font-lock;-*-
 
+#include<time.h>
+#include<unistd.h>
+
 #include<DataStream.hpp>
 #include<VSDataConverter.hpp>
 
@@ -26,8 +29,8 @@ int main(int argc, char** argv)
 
   const char* axes = *argv;
   argv++,argc--;
-  for(unsigned ichar=0; axis[ichar]; ichar++)
-    if(axis[ichar]<'0' || axis[ichar]>'2')
+  for(unsigned ichar=0; axes[ichar]; ichar++)
+    if(axes[ichar]<'0' || axes[ichar]>'2')
     {
       std::cerr << "Unrecognised axis: " << axes[ichar] << " ; axes must be combination of 0, 1, and 2." << '\n';
       exit(EXIT_FAILURE);
@@ -50,9 +53,9 @@ int main(int argc, char** argv)
       ds = ESPProtocol::makeSerialDataStream(port);
       ESPProtocol esp(ds);
       esp.clearAllErrorCodes();
-      for(unsigned ichar=0; axis[ichar]; ichar++)
+      for(unsigned ichar=0; axes[ichar]; ichar++)
       {
-        ESPProtocol::IAxis iaxis = axis[ichar] - '0';
+        ESPProtocol::IAxis iaxis = axes[ichar] - '0';
         if(on)esp.cmdMotorOn(iaxis);
         else esp.cmdMotorOff(iaxis);
         usleep(100000);
